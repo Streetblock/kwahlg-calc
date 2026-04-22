@@ -464,3 +464,80 @@ function renderSimpleResultsTable(options) {
         tieNoteContainer.style.display = 'none';
     }
 }
+
+function renderCommitteeResultsTable(options) {
+    const {
+        table,
+        results,
+        calculationBasis,
+        committeeSizes,
+        individualMembers
+    } = options;
+
+    if (!table) {
+        return '';
+    }
+
+    table.innerHTML = '';
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    headerRow.innerHTML = `<th>Fraktion / Fraktionsgem.</th><th>Sitze im Rat</th><th>Stimmen bei Wahl</th>`;
+    committeeSizes.forEach((size) => {
+        headerRow.innerHTML += `<th style="text-align: center;">Ausschuss (${size} Sitze)</th>`;
+    });
+
+    const tbody = table.createTBody();
+    const tieMessages = new Set();
+
+    calculationBasis.forEach((basis) => {
+        const row = tbody.insertRow();
+
+        row.innerHTML = `
+            <td style="background: ${basis.color}; color: #FFFFFF; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
+                ${basis.abbreviation}
+            </td>
+            <td style="text-align: right;">${basis.seatsInCouncil}</td>
+            <td style="text-align: right;">${basis.votes}</td>
+        `;
+
+        committeeSizes.forEach((size) => {
+            const resultForSize = results[size];
+            const tie = resultForSize.tieInfo;
+            const partyResult = resultForSize.partyResults.find((party) => party.id === basis.id);
+            const baseSeats = partyResult ? partyResult.proportionalSeats : 0;
+
+            let cellContent = `${baseSeats}`;
+
+            if (tie && tie.partiesInvolved.includes(basis.id)) {
+                cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> 🎲`;
+
+                const tiedPartyNames = tie.partiesInvolved
+                    .map((id) => {
+                        const party = calculationBasis.find((basisParty) => basisParty.id === id);
+                        return party ? party.abbreviation : '';
+                    })
+                    .join(', ');
+
+                tieMessages.add(`Für den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`);
+            }
+
+            row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
+        });
+    });
+
+    let finalNoteHTML = '';
+    if (individualMembers.length > 0) {
+        const memberNames = individualMembers.map((member) => `<strong>${member.abbreviation}</strong>`).join(', ');
+        finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gemäß § 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehören.</p>`;
+    }
+
+    if (tieMessages.size > 0) {
+        finalNoteHTML += `<hr><p><strong>Hinweis(e) zum Losverfahren (Hare-Niemeyer):</strong></p><ul>`;
+        tieMessages.forEach((message) => {
+            finalNoteHTML += `<li>${message}</li>`;
+        });
+        finalNoteHTML += '</ul>';
+    }
+
+    return finalNoteHTML;
+}

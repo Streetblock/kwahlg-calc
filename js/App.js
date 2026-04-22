@@ -1404,72 +1404,13 @@
     }//*/
 
     renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder) {
-        const table = this.DOM.committeeResultsTable;
-        table.innerHTML = '';
-        const thead = table.createTHead();
-        const headerRow = thead.insertRow();
-        headerRow.innerHTML = `<th>Fraktion / Fraktionsgem.</th><th>Sitze im Rat</th><th>Stimmen bei Wahl</th>`;
-        committeeSizes.forEach(size => {
-            headerRow.innerHTML += `<th style="text-align: center;">Ausschuss (${size} Sitze)</th>`;
+        return renderCommitteeResultsTable({
+            table: this.DOM.committeeResultsTable,
+            results,
+            calculationBasis,
+            committeeSizes,
+            individualMembers: einzelmitglieder
         });
-
-        const tbody = table.createTBody();
-        const tieMessages = new Set(); // Nur fÃ¼r Hare-Niemeyer 'tieInfo'
-
-        calculationBasis.forEach(basis => {
-            const row = tbody.insertRow();
-
-            // --- Hintergrund-Gradient fÃ¼r die erste Zelle ---
-            row.innerHTML = `
-                <td style="background: ${basis.color}; color: #FFFFFF; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
-                    ${basis.abbreviation}
-                </td>
-                <td style="text-align: right;">${basis.seatsInCouncil}</td>
-                <td style="text-align: right;">${basis.votes}</td>
-            `;
-            committeeSizes.forEach(size => {
-                const resultForSize = results[size];
-                const tie = resultForSize.tieInfo;
-                const partyResult = resultForSize.partyResults.find(p => p.id === basis.id);
-                const baseSeats = partyResult ? partyResult.proportionalSeats : 0;
-
-                let cellContent = `${baseSeats}`;
-
-                if (tie && tie.partiesInvolved.includes(basis.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
-
-                    const tiedPartyNames = tie.partiesInvolved
-                        .map(id => {
-                            const party = calculationBasis.find(b => b.id === id);
-                            return party ? party.abbreviation : '';
-                        })
-                        .join(', ');
-
-                    const message = `F\u00fcr den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
-                    tieMessages.add(message);
-                }
-
-                row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
-            });
-        });
-
-        // --- LOGIK GEÃ„NDERT: HTML-String wird gebaut und zurÃ¼ckgegeben ---
-        let finalNoteHTML = '';
-        if (einzelmitglieder.length > 0) {
-            const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
-        }
-
-        if (tieMessages.size > 0) {
-            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zum Losverfahren (Hare-Niemeyer):</strong></p><ul>`;
-            tieMessages.forEach(msg => {
-                finalNoteHTML += `<li>${msg}</li>`;
-            });
-            finalNoteHTML += '</ul>';
-        }
-
-        // GEÃ„NDERT: Gib den HTML-String fÃ¼r die Notizen zurÃ¼ck
-        return finalNoteHTML;
     }
 
     /*renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder) {
