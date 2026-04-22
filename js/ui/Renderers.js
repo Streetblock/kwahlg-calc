@@ -650,3 +650,57 @@ function renderCommitteeSizeInputList(container, seatSizes) {
         };
     });
 }
+
+function escapeProtocolText(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderProtocolEntry(entry) {
+    if (!entry) return '';
+
+    switch (entry.type) {
+        case 'heading':
+            return `<h${entry.level || 6}>${escapeProtocolText(entry.text || '')}</h${entry.level || 6}>`;
+        case 'paragraph':
+            return `<p>${escapeProtocolText(entry.text || '')}</p>`;
+        case 'allocation-table': {
+            const rows = (entry.rows || []).map((row) => `
+                <tr>
+                    <td>${row.seat}</td>
+                    <td style="background:${row.color}; color: var(--text-color); font-weight:bold; padding: 6px 8px;">${escapeProtocolText(row.party)}</td>
+                    <td>${Number(row.votes || 0).toLocaleString('de-DE')}</td>
+                    <td>${escapeProtocolText(row.divisor)}</td>
+                    <td>${Number(row.quotient || 0).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 4})}</td>
+                </tr>
+            `).join('');
+            return `<h6>${escapeProtocolText(entry.title || '')}</h6><table class="protocol-table"><thead><tr><th>Sitz Nr.</th><th>Partei</th><th>Stimmen</th><th>Divisor</th><th>Quotient</th></tr></thead><tbody>${rows}</tbody></table>`;
+        }
+        case 'lottery-info-list': {
+            const items = (entry.items || []).map((item) => `<li><strong>Sitz Nr. ${item.firstSeatNumber}</strong>: ${escapeProtocolText(item.message || '')}</li>`).join('');
+            return `<h6 style="color:var(--danger-color); margin-top:10px;">${escapeProtocolText(entry.title || '')}</h6><ul class="protocol-note" style="color:var(--danger-color); padding-left: 20px;">${items}</ul>`;
+        }
+        case 'tie-note':
+            return `<p class="protocol-note" style="color:var(--danger-color); font-weight:bold;">${escapeProtocolText(entry.text || '')}</p>`;
+        default:
+            return '';
+    }
+}
+
+function renderCommitteeProtocol(container, protocolEntries) {
+    if (!container) return;
+
+    const html = (protocolEntries || []).map((group) => {
+        if (group.type !== 'committee-size-protocol') {
+            return renderProtocolEntry(group);
+        }
+
+        return `${(group.entries || []).map((entry) => renderProtocolEntry(entry)).join('')}<hr>`;
+    }).join('');
+
+    container.innerHTML = html;
+}

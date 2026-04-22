@@ -57,7 +57,7 @@ module.exports = [
         }
     },
     {
-        name: "CommitteeCalculator returns protocol rendering data for D'Hondt committee access order",
+        name: "CommitteeCalculator returns structured protocol entries for D'Hondt committee access order",
         run() {
             const calculator = new CommitteeCalculator();
             const councilResults = [
@@ -76,7 +76,10 @@ module.exports = [
 
             assert.equal(result.displayMode, 'protocol');
             assert.equal(result.title, "Ergebnis der Zugriffs-Reihenfolge (D'Hondt)");
-            assert.ok(result.protocolHtml.includes("D'Hondt"));
+            assert.equal(result.protocolEntries.length, 2);
+            assert.equal(result.protocolEntries[0].type, 'committee-size-protocol');
+            assert.equal(result.protocolEntries[0].committeeSize, 5);
+            assert.ok(result.protocolEntries[0].entries.some((entry) => entry.type === 'allocation-table'));
             assert.ok(result.results[5]);
             assert.ok(result.results[7]);
         }

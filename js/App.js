@@ -1285,7 +1285,7 @@
             // UI umschalten: Protokoll AN, Tabelle AUS
             this.DOM.committeeTableWrapper.style.display = 'none';
             this.DOM.committeeProtocolContainer.style.display = 'block';
-            this.DOM.committeeProtocolContainer.innerHTML = committeeCalculation.protocolHtml;
+            renderCommitteeProtocol(this.DOM.committeeProtocolContainer, committeeCalculation.protocolEntries);
 
             // Die Warnung fÃ¼r fraktionslose Mitglieder muss hier separat hinzugefÃ¼gt werden
             if (committeeCalculation.individualMembers.length > 0) {

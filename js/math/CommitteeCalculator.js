@@ -63,21 +63,39 @@ class CommitteeCalculator {
         const context = this.buildCalculationContext(councilResults, factionAlliances, manualVotes);
         const allocator = mode === 'dhondt' ? this.dhondtAllocator : this.hareAllocator;
         const results = {};
-        const protocolHtmlParts = [];
+        const protocolEntries = [];
 
         committeeSizes.forEach((size) => {
             if (context.totalVotes > 0) {
                 const result = allocator.calculate(context.calculationBasis, size, context.totalVotes);
                 results[size] = result;
 
-                if (mode === 'dhondt' && result.stepsLog && result.stepsLog[0]) {
-                    protocolHtmlParts.push(result.stepsLog[0]);
+                if (mode === 'dhondt') {
+                    protocolEntries.push({
+                        type: 'committee-size-protocol',
+                        committeeSize: size,
+                        entries: result.protocolEntries || []
+                    });
                 }
             } else {
                 results[size] = { partyResults: [], tieInfo: null, lotteryInfos: [], stepsLog: [], protocolEntries: [] };
 
                 if (mode === 'dhondt') {
-                    protocolHtmlParts.push(`<h6>Protokoll für ${size} Sitze</h6><p>Keine Stimmen für die Berechnung vorhanden.</p>`);
+                    protocolEntries.push({
+                        type: 'committee-size-protocol',
+                        committeeSize: size,
+                        entries: [
+                            {
+                                type: 'heading',
+                                level: 6,
+                                text: `Protokoll für ${size} Sitze`
+                            },
+                            {
+                                type: 'paragraph',
+                                text: 'Keine Stimmen für die Berechnung vorhanden.'
+                            }
+                        ]
+                    });
                 }
             }
         });
@@ -88,7 +106,7 @@ class CommitteeCalculator {
             results,
             displayMode: mode === 'dhondt' ? 'protocol' : 'table',
             title: mode === 'dhondt' ? "Ergebnis der Zugriffs-Reihenfolge (D'Hondt)" : 'Ergebnis der Ausschuss-Sitzverteilung',
-            protocolHtml: protocolHtmlParts.join('<hr>')
+            protocolEntries
         };
     }
 }
