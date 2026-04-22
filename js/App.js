@@ -80,7 +80,6 @@ class AppController {
 
         this.appState = new AppState();
         this.state = {
-            proposals: [],
             councilResults: [],
             factionAlliances: [],
             customColorMappings: [],
@@ -165,6 +164,8 @@ class AppController {
             this.addInitialProposals();
 
         }
+
+        this.renderSimpleSizeInputs();
     }
 
     _bindEvents() {
@@ -262,6 +263,9 @@ class AppController {
         // --- Modus 2 (Einfach) Events ---
         this.DOM.addProposalButton.addEventListener('click', () => this.addProposal());
         this.DOM.addSimpleSizeBtn.addEventListener('click', () => this.addSimpleSizeInput()); // NEU
+        this.DOM.simpleProcedure.addEventListener('change', (e) => {
+            this.appState.setSimpleProcedure(e.target.value);
+        });
         // GEÄNDERT: Event-Listener muss nun 'async' sein
         this.DOM.clearProposalsButton.addEventListener('click', async () => await this.clearAllProposals());
         // NEU: Event-Listener für Reset-Button
@@ -615,50 +619,13 @@ class AppController {
         }
 
         const proposalColor = color || this.defaultColors[this.proposalIdCounter % this.defaultColors.length];
-
-        const proposalDiv = document.createElement('div');
-        proposalDiv.className = 'proposal-item';
-        proposalDiv.dataset.proposalId = proposalId;
-
-        proposalDiv.innerHTML = `
-            <div class="color-input-wrapper">
-                <div class="color-preview" style="background: ${proposalColor};"></div>
-                <input type="color" class="color-picker-hidden" value="${proposalColor}">
-            </div>
-            <input type="text" placeholder="Name" value="${name}" class="proposal-name">
-            <input type="number" placeholder="Stimmen" value="${votes}" min="0" style="text-align:right;">
-            <button class="btn-remove">X</button>
-        `;
-
-        const colorPreview = proposalDiv.querySelector('.color-preview');
-        const colorInput = proposalDiv.querySelector('.color-picker-hidden');
-        const nameInput = proposalDiv.querySelector('.proposal-name');
-
-        colorPreview.addEventListener('click', () => colorInput.click());
-        colorInput.addEventListener('change', () => {
-            colorPreview.style.background = colorInput.value;
+        this.appState.addSimpleProposal({
+            id: proposalId,
+            color: proposalColor,
+            abbreviation: name,
+            votes
         });
-
-        // NEU: Macht die Vorschau fokussierbar und per Tastatur bedienbar
-        colorPreview.tabIndex = 0;
-        colorPreview.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                colorInput.click();
-            }
-        });
-
-        nameInput.addEventListener('input', () => {
-             this._updateColorFromName(nameInput.value, colorPreview, colorInput);
-        });
-
-        proposalDiv.querySelector('.btn-remove').addEventListener('click', (e) => {
-            e.target.closest('.proposal-item').remove();
-            this.state.proposals = this.state.proposals.filter(p => p.id !== proposalId);
-        });
-
-        this.DOM.simpleProposalsContainer.appendChild(proposalDiv);
-        this.state.proposals.push({ id: proposalId, element: proposalDiv });
+        this.renderSimpleProposalList();
     }
 
     // GEÄNDERT: Muss 'async' sein, um auf das Modal zu warten
@@ -673,53 +640,123 @@ class AppController {
             );
             if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
         }
-        this.DOM.simpleProposalsContainer.querySelectorAll('.proposal-item').forEach(el => el.remove());
-        this.state.proposals = [];
+        this.appState.clearSimpleProposals();
+        this.renderSimpleProposalList();
     }
 
     // NEU: Setzt alle Stimmen im "Einfach"-Modus auf 0
     resetAllProposalVotes() {
-        this.DOM.simpleProposalsContainer.querySelectorAll('.proposal-item').forEach(el => {
-            // Findet das Input-Feld für "Stimmen" (hier das einzige input[type="number"])
-            const votesInput = el.querySelector('input[type="number"]');
-            if (votesInput) {
-                votesInput.value = 0;
-            }
-        });
+        this.appState.resetSimpleProposalVotes();
+        this.renderSimpleProposalList();
     }
 
     // NEU: Fügt ein weiteres Eingabefeld für die Sitzgröße hinzu
     addSimpleSizeInput() {
-        const div = document.createElement('div');
-        div.className = 'simple-size-input';
-        div.innerHTML = `<input type="number" placeholder="Weitere Größe" min="1" class="simple-size"><button class="btn-remove">X</button>`;
-        div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
-        this.DOM.simpleSizesContainer.appendChild(div);
+        this.appState.addSimpleSeatSize('');
+        this.renderSimpleSizeInputs();
     }
 
     _getProposalsFromUI() {
-        return Array.from(this.DOM.simpleProposalsContainer.querySelectorAll('.proposal-item')).map(el => {
-            const colorPreview = el.querySelector('.color-preview');
-            const nameInput = el.querySelector('.proposal-name');
-            const votesInput = el.querySelector('input[type="number"]');
+        return this.appState.getSimpleProposals();
+    }
 
-            return {
-                id: el.dataset.proposalId,
-                color: colorPreview.style.background,
-                abbreviation: nameInput.value || 'Unbenannt',
-                votes: parseInt(votesInput.value) || 0,
-            };
+    renderSimpleProposalList() {
+        const proposals = this.appState.getSimpleProposals();
+        this.DOM.simpleProposalsContainer.innerHTML = '';
+
+        proposals.forEach((proposal) => {
+            const proposalDiv = document.createElement('div');
+            proposalDiv.className = 'proposal-item';
+            proposalDiv.dataset.proposalId = proposal.id;
+
+            proposalDiv.innerHTML = `
+                <div class="color-input-wrapper">
+                    <div class="color-preview" style="background: ${proposal.color};"></div>
+                    <input type="color" class="color-picker-hidden" value="${this._getColorPickerValue(proposal.color)}">
+                </div>
+                <input type="text" placeholder="Name" value="${proposal.abbreviation}" class="proposal-name">
+                <input type="number" placeholder="Stimmen" value="${proposal.votes}" min="0" style="text-align:right;">
+                <button class="btn-remove">X</button>
+            `;
+
+            const colorPreview = proposalDiv.querySelector('.color-preview');
+            const colorInput = proposalDiv.querySelector('.color-picker-hidden');
+            const nameInput = proposalDiv.querySelector('.proposal-name');
+            const votesInput = proposalDiv.querySelector('input[type="number"]');
+
+            colorPreview.addEventListener('click', () => colorInput.click());
+            colorPreview.tabIndex = 0;
+            colorPreview.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    colorInput.click();
+                }
+            });
+
+            colorInput.addEventListener('change', () => {
+                colorPreview.style.background = colorInput.value;
+                this.appState.updateSimpleProposal(proposal.id, { color: colorInput.value });
+            });
+
+            nameInput.addEventListener('input', () => {
+                this.appState.updateSimpleProposal(proposal.id, { abbreviation: nameInput.value || 'Unbenannt' });
+                this._updateColorFromName(nameInput.value, colorPreview, colorInput);
+                this.appState.updateSimpleProposal(proposal.id, { color: colorPreview.style.background });
+            });
+
+            votesInput.addEventListener('input', () => {
+                this.appState.updateSimpleProposal(proposal.id, { votes: parseInt(votesInput.value, 10) || 0 });
+            });
+
+            proposalDiv.querySelector('.btn-remove').addEventListener('click', () => {
+                this.appState.removeSimpleProposal(proposal.id);
+                this.renderSimpleProposalList();
+            });
+
+            this.DOM.simpleProposalsContainer.appendChild(proposalDiv);
+        });
+    }
+
+    renderSimpleSizeInputs() {
+        const seatSizes = this.appState.getSimpleSeatSizes();
+        this.DOM.simpleSizesContainer.innerHTML = '';
+        this.DOM.simpleProcedure.value = this.appState.getSimpleProcedure();
+
+        seatSizes.forEach((size, index) => {
+            const div = document.createElement('div');
+            div.className = 'simple-size-input';
+
+            const removeButtonHtml = index === 0 && seatSizes.length === 1
+                ? ''
+                : '<button class="btn-remove">X</button>';
+
+            div.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 10' : 'Weitere Größe'}" value="${size}" min="1" class="simple-size">${removeButtonHtml}`;
+
+            const input = div.querySelector('input');
+            input.addEventListener('input', () => {
+                this.appState.updateSimpleSeatSize(index, input.value);
+            });
+
+            const removeButton = div.querySelector('.btn-remove');
+            if (removeButton) {
+                removeButton.addEventListener('click', () => {
+                    this.appState.removeSimpleSeatSize(index);
+                    this.renderSimpleSizeInputs();
+                });
+            }
+
+            this.DOM.simpleSizesContainer.appendChild(div);
         });
     }
 
     // ÜBERARBEITET: Führt Berechnung für mehrere Sitzgrößen durch
     runSimpleCalculation() {
         // Liest alle Sitzgrößen aus
-        const simpleSizes = Array.from(this.DOM.simpleSizesContainer.querySelectorAll('.simple-size'))
-            .map(input => parseInt(input.value))
+        const simpleSizes = this.appState.getSimpleSeatSizes()
+            .map(value => parseInt(value, 10))
             .filter(val => !isNaN(val) && val > 0);
 
-        const procedure = this.DOM.simpleProcedure.value;
+        const procedure = this.appState.getSimpleProcedure();
         const proposalsData = this._getProposalsFromUI();
         const totalVotes = proposalsData.reduce((sum, p) => sum + p.votes, 0);
 
@@ -1933,13 +1970,6 @@ class AppController {
             }));
         };
 
-        // Helfer-Funktion, um die "einfachen" Sitzgrößen auszulesen
-        const getSimpleSizes = () => {
-             return Array.from(this.DOM.simpleSizesContainer.querySelectorAll('.simple-size'))
-                .map(input => input.value)
-                .filter(val => val.trim() !== '');
-        };
-
         // Das State-Objekt, das alles enthält, was wir speichern wollen
         const state = {
             // KORREKTUR 1: Den Query auf den Haupt-Tab-Container beschränkt
@@ -1952,8 +1982,8 @@ class AppController {
                 presentVotes: getPresentVotes() // Speichert die Anwesenheit
             },
             simpleState: {
-                procedure: this.DOM.simpleProcedure.value,
-                seatSizes: getSimpleSizes(),
+                procedure: this.appState.getSimpleProcedure(),
+                seatSizes: this.appState.getSimpleSeatSizes().filter(val => val.trim() !== ''),
                 proposals: this._getProposalsFromUI() // Gibt saubere Daten zurück
             },
             customColorMappings: this.state.customColorMappings // NEU
@@ -2084,35 +2114,9 @@ class AppController {
                     this.addProposal(p.abbreviation, p.votes, p.color, p.id);
                 });
             }
-            this.DOM.simpleProcedure.value = state.simpleState.procedure || 'hare';
-
-            // Sitzgrößen-Eingabefelder wiederherstellen
-            this.DOM.simpleSizesContainer.innerHTML = ''; // Standard-Feld leeren
-            const sizes = state.simpleState.seatSizes;
-            if (sizes && Array.isArray(sizes) && sizes.length > 0) {
-                sizes.forEach((size, index) => {
-                    if (index === 0) {
-                        // Das erste Feld (hat keinen Löschen-Button)
-                        const div = document.createElement('div');
-                        div.className = 'simple-size-input';
-                        div.innerHTML = `<input type="number" placeholder="z.B. 10" value="${size}" min="1" class="simple-size">`;
-                        this.DOM.simpleSizesContainer.appendChild(div);
-                    } else {
-                        // Alle weiteren Felder (mit Löschen-Button)
-                        this.addSimpleSizeInput(); // Fügt ein leeres Feld hinzu
-                        const lastInput = this.DOM.simpleSizesContainer.lastChild.querySelector('input');
-                        if (lastInput) {
-                            lastInput.value = size; // Setzt den Wert
-                        }
-                    }
-                });
-            } else {
-                // Fallback: Ein leeres Feld hinzufügen, wenn nichts gespeichert war
-                 const div = document.createElement('div');
-                 div.className = 'simple-size-input';
-                 div.innerHTML = `<input type="number" placeholder="z.B. 10" value="10" min="1" class="simple-size">`;
-                 this.DOM.simpleSizesContainer.appendChild(div);
-            }
+            this.appState.setSimpleProcedure(state.simpleState.procedure || 'hare');
+            this.appState.setSimpleSeatSizes(state.simpleState.seatSizes);
+            this.renderSimpleSizeInputs();
         }
 
         // --- 3. App-Modus (Tab) wiederherstellen ---
@@ -2389,5 +2393,7 @@ class AppController {
 
     window.app = new AppController();
 });
+
+
 
 
