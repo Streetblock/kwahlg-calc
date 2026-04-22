@@ -1242,19 +1242,6 @@
         this.renderFraktionenForGemeinschaft();
     }
 
-    /*createFraktionsgemeinschaft() {
-        const selectedCheckboxes = this.DOM.factionAllianceListElement.querySelectorAll('input[type="checkbox"]:checked');
-        if (selectedCheckboxes.length < 2) {
-            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder fÃ¼r eine Fraktionsgemeinschaft auswÃ¤hlen.</p>");
-            return;
-        }
-        const memberIds = Array.from(selectedCheckboxes).map(chk => chk.closest('.fraktion-item').dataset.fraktionId);
-        const memberFraktionen = this.state.councilResults.filter(f => memberIds.includes(f.id));
-        const totalSitze = memberFraktionen.reduce((sum, f) => sum + f.seats, 0);
-        const name = memberFraktionen.map(f => f.abbreviation).join(' + ');
-        this.state.factionAlliances.push({ name, totalSitze, memberIds });
-        this.renderFraktionenForGemeinschaft();
-    }*/
     dissolveFraktionsgemeinschaften() {
         this.appState.clearCommitteeFactionAlliances();
         this.state.factionAlliances = [];
@@ -1268,35 +1255,6 @@
             this.state.councilResults,
             this.state.factionAlliances
         );
-    }
-
-    /*renderFraktionenForGemeinschaft() {
-        this.DOM.factionAllianceListElement.innerHTML = '';
-        const allMembers = this.state.councilResults.filter(p => p.seats > 0);
-        const assignedFraktionIds = new Set(this.state.factionAlliances.flatMap(zg => zg.memberIds));
-        this.state.factionAlliances.forEach(zg => {
-            const div = document.createElement('div');
-            div.className = 'fraktionsgemeinschaft';
-            div.innerHTML = `<div class="fraktionsgemeinschaft-header">${zg.name} (${zg.totalSitze} Sitze)</div>`;
-            this.DOM.factionAllianceListElement.appendChild(div);
-        });
-        const remainingMembers = allMembers.filter(m => !assignedFraktionIds.has(m.id));
-        if (remainingMembers.length > 0) {
-            const h5 = document.createElement('h5');
-            h5.textContent = 'Verbleibende Fraktionen / Mitglieder';
-            this.DOM.factionAllianceListElement.appendChild(h5);
-            remainingMembers.forEach(mitglied => {
-                this.DOM.factionAllianceListElement.appendChild(this._createFraktionListItem(mitglied));
-            });
-        }
-    }//*/
-
-    _createFraktionListItem(fraktion) {
-        const li = document.createElement('li');
-        li.className = 'fraktion-item';
-        li.dataset.fraktionId = fraktion.id;
-        li.innerHTML = `<input type="checkbox" id="chk-${fraktion.id}"><label for="chk-${fraktion.id}">${fraktion.abbreviation} (${fraktion.seats} Sitze)</label>`;
-        return li;
     }
 
     calculateCommitteeSeats() {
@@ -1746,14 +1704,6 @@
               return;
         }
 
-        // Helfer-Funktion, um die Anwesenheitsstimmen auszulesen
-        const getPresentVotes = () => {
-            return Array.from(this.DOM.votingStrengthContainer.querySelectorAll('.voting-item')).map(item => ({
-                partyId: item.dataset.partyId,
-                present: item.querySelector('input').value
-            }));
-        };
-
         // Das State-Objekt, das alles enthÃ¤lt, was wir speichern wollen
         const state = {
             // KORREKTUR 1: Den Query auf den Haupt-Tab-Container beschrÃ¤nkt
@@ -1762,8 +1712,7 @@
                 // KORREKTUR 2: Die Hilfsfunktion verwenden
                 inputMode: this._getNrwInputMode(),
                 councilSize: this.DOM.councilSize.value,
-                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurÃ¼ck
-                presentVotes: getPresentVotes() // Speichert die Anwesenheit
+                parties: this._getPartiesFromUI() // Diese Methode gibt bereits saubere Daten zurÃ¼ck
             },
             simpleState: {
                 procedure: this.appState.getSimpleProcedure(),
@@ -1786,53 +1735,6 @@
             console.error("Fehler beim Speichern des Anwendungs-Status:", e);
         }
     }
-
-    /*_saveStateToStorage() {
-        // Nicht speichern, wenn ein Reset ausgelÃ¶st wurde
-        if (this.isResetting) {
-              return;
-        }
-
-        // Helfer-Funktion, um die Anwesenheitsstimmen auszulesen
-        const getPresentVotes = () => {
-            return Array.from(this.DOM.votingStrengthContainer.querySelectorAll('.voting-item')).map(item => ({
-                partyId: item.dataset.partyId,
-                present: item.querySelector('input').value
-            }));
-        };
-
-        // Helfer-Funktion, um die "einfachen" SitzgrÃ¶ÃŸen auszulesen
-        const getSimpleSizes = () => {
-             return Array.from(this.DOM.simpleSizesContainer.querySelectorAll('.simple-size'))
-                .map(input => input.value)
-                .filter(val => val.trim() !== '');
-        };
-
-        // Das State-Objekt, das alles enthÃ¤lt, was wir speichern wollen
-        const state = {
-            appMode: document.querySelector('.tab.active').dataset.mode,
-            nrwState: {
-                inputMode: document.querySelector('input[name="input-mode"]:checked').value,
-                councilSize: this.DOM.councilSize.value,
-                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurÃ¼ck
-                presentVotes: getPresentVotes() // Speichert die Anwesenheit
-            },
-            simpleState: {
-                procedure: this.DOM.simpleProcedure.value,
-                seatSizes: getSimpleSizes(),
-                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurÃ¼ck
-            },
-            customColorMappings: this.state.customColorMappings // NEU
-        };
-
-        try {
-            // Speichern des gesamten Zustands als JSON-String
-            localStorage.setItem(this.storageKey, JSON.stringify(state));
-            console.log("Anwendungs-Status gespeichert.");
-        } catch (e) {
-            console.error("Fehler beim Speichern des Anwendungs-Status:", e);
-        }
-    }//*/
 
     /**
      * NEU: LÃ¤dt den Zustand aus dem localStorage und stellt die UI wieder her.
@@ -1908,10 +1810,16 @@
             this.renderSimpleSizeInputs();
         }
 
-        if (state.committeeState) {
-            this.appState.setCommitteeSeatSizes(state.committeeState.seatSizes);
-            this.appState.setCommitteePresentVotes(state.committeeState.presentVotes);
-            this.appState.setCommitteeFactionAlliances(state.committeeState.factionAlliances);
+        const committeeState = state.committeeState || {
+            seatSizes: ['19'],
+            presentVotes: state.nrwState?.presentVotes || [],
+            factionAlliances: []
+        };
+
+        if (committeeState) {
+            this.appState.setCommitteeSeatSizes(committeeState.seatSizes);
+            this.appState.setCommitteePresentVotes(committeeState.presentVotes);
+            this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
             this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
             this.renderCommitteeSizeInputs();
         }
@@ -1920,16 +1828,13 @@
         const appMode = state.appMode || 'simple';
         this.switchAppMode(appMode);
 
-        // --- 4. Anwesenheit (presentVotes) wiederherstellen ---
-        // Dies tun wir nur, wenn im NRW-Modus Parteien geladen wurden UND Anwesenheitsdaten gespeichert waren.
-        if (state.nrwState && state.nrwState.parties && state.nrwState.parties.length > 0 &&
-            state.committeeState) {
-
-            // Schritt 1: Ratssitze (neu) berechnen. Das ist nÃ¶tig, um die UI fÃ¼r "Anwesenheit" Ã¼berhaupt erst aufzubauen.
+        // --- 4. Ausschussdaten wiederherstellen ---
+        // Ausschussdaten bleiben fachlich getrennt gespeichert, brauchen aber vorhandene Ratssitze als Grundlage.
+        if (state.nrwState && state.nrwState.parties && state.nrwState.parties.length > 0) {
             this.calculateCouncilSeats();
 
-            this.appState.setCommitteePresentVotes(state.committeeState.presentVotes);
-            this.appState.setCommitteeFactionAlliances(state.committeeState.factionAlliances);
+            this.appState.setCommitteePresentVotes(committeeState.presentVotes);
+            this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
             this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
             this.renderCommitteeVotingInputs();
             this.renderFraktionenForGemeinschaft();
