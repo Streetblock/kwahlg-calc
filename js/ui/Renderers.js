@@ -15,24 +15,24 @@ class CoalitionAnalyzer {
     }
 
     updateChecklist(parties) {
-        // Filtere Parteien, die tatsächlich Sitze haben und nicht eliminiert sind
+        // Filtere Parteien, die tatsÃ¤chlich Sitze haben und nicht eliminiert sind
         this.partiesForCoalition = parties.filter(p => p.seats > 0 && !p.isEliminated);
         if (!this.listContainer) return; // Sicherstellen, dass Container existiert
         this.listContainer.innerHTML = ''; // Leere vorherige Liste
 
-        // KORREKTUR: Prüfen, ob this.totalSeatsInput existiert, bevor .value gelesen wird
+        // KORREKTUR: PrÃ¼fen, ob this.totalSeatsInput existiert, bevor .value gelesen wird
         const actualParliamentSize = (app && app.currentResultsData && app.currentResultsData.totalSeats !== undefined)
                                      ? app.currentResultsData.totalSeats
                                      : (this.totalSeatsInput ? parseInt(this.totalSeatsInput.value) : NaN); // Fallback auf NaN
 
         if (isNaN(actualParliamentSize) || actualParliamentSize <= 0) {
-            this.listContainer.innerHTML = '<p>Keine gültige Parlamentsgröße für Koalitionsanalyse.</p>';
+            this.listContainer.innerHTML = '<p>Keine gÃ¼ltige ParlamentsgrÃ¶ÃŸe fÃ¼r Koalitionsanalyse.</p>';
             return;
         }
         const majorityThreshold = Math.floor(actualParliamentSize / 2) + 1;
 
         const header = document.createElement('p');
-        header.innerHTML = `Wählen Sie Parteien aus. Benötigte Mehrheit: <strong>${majorityThreshold}</strong> Sitze (bei ${actualParliamentSize} Gesamtsitzen).`;
+        header.innerHTML = `WÃ¤hlen Sie Parteien aus. BenÃ¶tigte Mehrheit: <strong>${majorityThreshold}</strong> Sitze (bei ${actualParliamentSize} Gesamtsitzen).`;
         this.listContainer.appendChild(header);
 
         this.partiesForCoalition.forEach(party => {
@@ -54,13 +54,13 @@ class CoalitionAnalyzer {
 
         const checkboxes = this.listContainer.querySelectorAll('input[type="checkbox"]:checked');
 
-        // KORREKTUR: Prüfen, ob this.totalSeatsInput existiert
+        // KORREKTUR: PrÃ¼fen, ob this.totalSeatsInput existiert
         const actualParliamentSize = (app && app.currentResultsData && app.currentResultsData.totalSeats !== undefined)
                                      ? app.currentResultsData.totalSeats
                                      : (this.totalSeatsInput ? parseInt(this.totalSeatsInput.value) : NaN); // Fallback auf NaN
 
         if (isNaN(actualParliamentSize) || actualParliamentSize <= 0) {
-            this.resultContainer.innerHTML = `<span class="no-majority">Gesamtzahl der Sitze ist ungültig.</span>`;
+            this.resultContainer.innerHTML = `<span class="no-majority">Gesamtzahl der Sitze ist ungÃ¼ltig.</span>`;
             return;
         }
         const majorityThreshold = Math.floor(actualParliamentSize / 2) + 1;
@@ -77,23 +77,23 @@ class CoalitionAnalyzer {
         });
 
         if (selectedPartiesInCoalition.length === 0) {
-            this.resultContainer.innerHTML = "Bitte wählen Sie mindestens eine Partei für die Koalitionsprüfung aus.";
+            this.resultContainer.innerHTML = "Bitte wÃ¤hlen Sie mindestens eine Partei fÃ¼r die KoalitionsprÃ¼fung aus.";
             return;
         }
 
         const partyNames = selectedPartiesInCoalition.map(p => `<span style="color:${p.color}; font-weight:bold;">${p.abbreviation}</span>`).join(" + ");
-        let resultHTML = `Mögliche Koalition: ${partyNames}<br>`;
+        let resultHTML = `MÃ¶gliche Koalition: ${partyNames}<br>`;
         resultHTML += `Sitze gesamt: <strong>${coalitionSeats}</strong> von ${actualParliamentSize}<br>`;
 
         if (coalitionSeats >= majorityThreshold) {
-            resultHTML += `<span class="majority">Diese Koalition hätte eine Mehrheit von ${coalitionSeats - majorityThreshold + 1} Stimme(n).</span>`;
+            resultHTML += `<span class="majority">Diese Koalition hÃ¤tte eine Mehrheit von ${coalitionSeats - majorityThreshold + 1} Stimme(n).</span>`;
         } else {
-            resultHTML += `<span class="no-majority">Diese Koalition hätte keine Mehrheit (fehlen ${majorityThreshold - coalitionSeats} Stimme(n)).</span>`;
+            resultHTML += `<span class="no-majority">Diese Koalition hÃ¤tte keine Mehrheit (fehlen ${majorityThreshold - coalitionSeats} Stimme(n)).</span>`;
         }
 
         if (this.lotteryWasIndicated) {
             if (this.isPivotalLottery) {
-                resultHTML += `<br><p style="color:var(--danger-color); font-size:0.9em;"><strong>ACHTUNG:</strong> Ein Losverfahren KÖNNTE die tatsächlichen Mehrheitsverhältnisse maßgeblich beeinflussen!</p>`;
+                resultHTML += `<br><p style="color:var(--danger-color); font-size:0.9em;"><strong>ACHTUNG:</strong> Ein Losverfahren KÃ–NNTE die tatsÃ¤chlichen MehrheitsverhÃ¤ltnisse maÃŸgeblich beeinflussen!</p>`;
             } else {
                 resultHTML += `<br><p style="color:var(--warning-color); font-size:0.9em;">Hinweis: Ein Losverfahren trat auf, beeinflusst die Mehrheiten hier aber voraussichtlich nicht wesentlich.</p>`;
             }
@@ -116,7 +116,7 @@ class CoalitionAnalyzer {
         if (lotteryHappened) {
             const warningP = document.createElement('p');
             if (isPivotalLotteryParam) {
-                warningP.innerHTML = `<strong style="color:var(--danger-color);">ACHTUNG:</strong> Die Koalitionsmehrheiten basieren auf einer deterministischen Zuteilung von Los-Sitzen. Der Ausgang eines echten Losverfahrens KÖNNTE die Mehrheitsverhältnisse maßgeblich verändern!`;
+                warningP.innerHTML = `<strong style="color:var(--danger-color);">ACHTUNG:</strong> Die Koalitionsmehrheiten basieren auf einer deterministischen Zuteilung von Los-Sitzen. Der Ausgang eines echten Losverfahrens KÃ–NNTE die MehrheitsverhÃ¤ltnisse maÃŸgeblich verÃ¤ndern!`;
             } else {
                 warningP.innerHTML = `<strong style="color:var(--warning-color);">Hinweis:</strong> Die Koalitionsmehrheiten basieren auf einer deterministischen Zuteilung von Los-Sitzen. Dies beeinflusst die Mehrheiten hier aber voraussichtlich nicht wesentlich.`;
             }
@@ -124,13 +124,13 @@ class CoalitionAnalyzer {
         }
 
         if (partiesWithSeats.length === 0) {
-            this.autoResultsContainer.innerHTML = '<p class="no-coalitions-found">Keine Parteien mit Sitzen für Koalitionsbildung (nach Sperrklausel).</p>';
+            this.autoResultsContainer.innerHTML = '<p class="no-coalitions-found">Keine Parteien mit Sitzen fÃ¼r Koalitionsbildung (nach Sperrklausel).</p>';
             return;
         }
 
         const singlePartyMajority = partiesWithSeats.find(p => p.seats >= majorityThreshold);
         if (singlePartyMajority) {
-            if (h3Automated) h3Automated.innerHTML = `Absolute Mehrheit für eine Partei <small>(Mehrheit: ${majorityThreshold} von ${displayParliamentSize} Sitzen)</small>:`;
+            if (h3Automated) h3Automated.innerHTML = `Absolute Mehrheit fÃ¼r eine Partei <small>(Mehrheit: ${majorityThreshold} von ${displayParliamentSize} Sitzen)</small>:`;
             const p = document.createElement('p');
             p.innerHTML = `<span style="color:${singlePartyMajority.color}; font-weight:bold;">${singlePartyMajority.abbreviation}</span> (Sitze: ${singlePartyMajority.seats}, Mehrheit von ${singlePartyMajority.seats - majorityThreshold + 1} Stimme(n))`;
             this.autoResultsContainer.appendChild(p);
@@ -321,3 +321,146 @@ function renderCouncilResultsTable(options) {
     detailsContainer.parentNode.insertBefore(tieNote, detailsContainer);
 }
 
+
+
+function renderSimpleProposalList(container, proposals, options = {}) {
+    const {
+        getColorPickerValue = (color) => color
+    } = options;
+
+    if (!container) return [];
+
+    container.innerHTML = '';
+
+    return proposals.map((proposal) => {
+        const proposalElement = document.createElement('div');
+        proposalElement.className = 'proposal-item';
+        proposalElement.dataset.proposalId = proposal.id;
+
+        proposalElement.innerHTML = `
+            <div class="color-input-wrapper">
+                <div class="color-preview" style="background: ${proposal.color};"></div>
+                <input type="color" class="color-picker-hidden" value="${getColorPickerValue(proposal.color)}">
+            </div>
+            <input type="text" placeholder="Name" value="${proposal.abbreviation}" class="proposal-name">
+            <input type="number" placeholder="Stimmen" value="${proposal.votes}" min="0" style="text-align:right;">
+            <button class="btn-remove">X</button>
+        `;
+
+        container.appendChild(proposalElement);
+
+        return {
+            proposal,
+            proposalElement,
+            colorPreview: proposalElement.querySelector('.color-preview'),
+            colorInput: proposalElement.querySelector('.color-picker-hidden'),
+            nameInput: proposalElement.querySelector('.proposal-name'),
+            votesInput: proposalElement.querySelector('input[type="number"]'),
+            removeButton: proposalElement.querySelector('.btn-remove')
+        };
+    });
+}
+
+function renderSimpleSizeInputList(container, seatSizes, procedure, options = {}) {
+    const {
+        procedureSelect = null
+    } = options;
+
+    if (!container) return [];
+
+    container.innerHTML = '';
+    if (procedureSelect) {
+        procedureSelect.value = procedure;
+    }
+
+    return seatSizes.map((size, index) => {
+        const sizeElement = document.createElement('div');
+        sizeElement.className = 'simple-size-input';
+
+        const removeButtonHtml = index === 0 && seatSizes.length === 1
+            ? ''
+            : '<button class="btn-remove">X</button>';
+
+        sizeElement.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 10' : 'Weitere Größe'}" value="${size}" min="1" class="simple-size">${removeButtonHtml}`;
+        container.appendChild(sizeElement);
+
+        return {
+            index,
+            sizeElement,
+            input: sizeElement.querySelector('input'),
+            removeButton: sizeElement.querySelector('.btn-remove')
+        };
+    });
+}
+
+function renderSimpleResultsTable(options) {
+    const {
+        table,
+        tieNoteContainer,
+        results,
+        proposalsData,
+        totalVotes,
+        simpleSizes
+    } = options;
+
+    if (!table) return;
+
+    table.innerHTML = '';
+
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    headerRow.innerHTML = `<th>Farbe</th><th>Vorschlag / Liste</th><th>Stimmen</th><th>Anteil</th>`;
+    simpleSizes.forEach((size) => {
+        headerRow.innerHTML += `<th style="text-align: center;">Sitze (${size})</th>`;
+    });
+
+    const tbody = table.createTBody();
+    const tieMessages = new Set();
+
+    proposalsData.filter((proposal) => proposal.votes > 0).forEach((proposal) => {
+        const row = tbody.insertRow();
+        const voteShare = totalVotes > 0 ? (proposal.votes / totalVotes * 100) : 0;
+
+        row.innerHTML = `
+            <td><div class="color-preview" style="background: ${proposal.color};"></div></td>
+            <td>${proposal.abbreviation}</td>
+            <td style="text-align: right;">${proposal.votes.toLocaleString('de-DE')}</td>
+            <td style="text-align: right;">${voteShare.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} %</td>
+        `;
+
+        simpleSizes.forEach((size) => {
+            const resultForSize = results[size];
+            const tie = resultForSize.tieInfo;
+            const partyResult = resultForSize.partyResults.find((party) => party.id === proposal.id);
+            const baseSeats = partyResult ? partyResult.proportionalSeats : 0;
+
+            let cellContent = `${baseSeats}`;
+
+            if (tie && tie.partiesInvolved.includes(proposal.id)) {
+                cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> 🎲`;
+
+                const tiedPartyNames = tie.partiesInvolved
+                    .map((id) => proposalsData.find((proposalItem) => proposalItem.id === id)?.abbreviation || '')
+                    .join(', ');
+
+                tieMessages.add(`Für die Verteilung von <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`);
+            }
+
+            row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
+        });
+    });
+
+    if (!tieNoteContainer) return;
+
+    if (tieMessages.size > 0) {
+        let finalNoteHTML = `<p><strong>Hinweis(e) zum Losverfahren:</strong></p><ul>`;
+        tieMessages.forEach((message) => {
+            finalNoteHTML += `<li>${message}</li>`;
+        });
+        finalNoteHTML += '</ul>';
+        tieNoteContainer.innerHTML = finalNoteHTML;
+        tieNoteContainer.style.display = 'block';
+    } else {
+        tieNoteContainer.style.display = 'none';
+    }
+}

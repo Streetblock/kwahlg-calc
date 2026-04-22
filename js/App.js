@@ -662,28 +662,11 @@
 
     renderSimpleProposalList() {
         const proposals = this.appState.getSimpleProposals();
-        this.DOM.simpleProposalsContainer.innerHTML = '';
+        const proposalInputs = renderSimpleProposalList(this.DOM.simpleProposalsContainer, proposals, {
+            getColorPickerValue: (color) => this._getColorPickerValue(color)
+        });
 
-        proposals.forEach((proposal) => {
-            const proposalDiv = document.createElement('div');
-            proposalDiv.className = 'proposal-item';
-            proposalDiv.dataset.proposalId = proposal.id;
-
-            proposalDiv.innerHTML = `
-                <div class="color-input-wrapper">
-                    <div class="color-preview" style="background: ${proposal.color};"></div>
-                    <input type="color" class="color-picker-hidden" value="${this._getColorPickerValue(proposal.color)}">
-                </div>
-                <input type="text" placeholder="Name" value="${proposal.abbreviation}" class="proposal-name">
-                <input type="number" placeholder="Stimmen" value="${proposal.votes}" min="0" style="text-align:right;">
-                <button class="btn-remove">X</button>
-            `;
-
-            const colorPreview = proposalDiv.querySelector('.color-preview');
-            const colorInput = proposalDiv.querySelector('.color-picker-hidden');
-            const nameInput = proposalDiv.querySelector('.proposal-name');
-            const votesInput = proposalDiv.querySelector('input[type="number"]');
-
+        proposalInputs.forEach(({ proposal, colorPreview, colorInput, nameInput, votesInput, removeButton }) => {
             colorPreview.addEventListener('click', () => colorInput.click());
             colorPreview.tabIndex = 0;
             colorPreview.addEventListener('keydown', (e) => {
@@ -708,44 +691,33 @@
                 this.appState.updateSimpleProposal(proposal.id, { votes: parseInt(votesInput.value, 10) || 0 });
             });
 
-            proposalDiv.querySelector('.btn-remove').addEventListener('click', () => {
+            removeButton.addEventListener('click', () => {
                 this.appState.removeSimpleProposal(proposal.id);
                 this.renderSimpleProposalList();
             });
-
-            this.DOM.simpleProposalsContainer.appendChild(proposalDiv);
         });
     }
 
     renderSimpleSizeInputs() {
         const seatSizes = this.appState.getSimpleSeatSizes();
-        this.DOM.simpleSizesContainer.innerHTML = '';
-        this.DOM.simpleProcedure.value = this.appState.getSimpleProcedure();
+        const sizeInputs = renderSimpleSizeInputList(
+            this.DOM.simpleSizesContainer,
+            seatSizes,
+            this.appState.getSimpleProcedure(),
+            { procedureSelect: this.DOM.simpleProcedure }
+        );
 
-        seatSizes.forEach((size, index) => {
-            const div = document.createElement('div');
-            div.className = 'simple-size-input';
-
-            const removeButtonHtml = index === 0 && seatSizes.length === 1
-                ? ''
-                : '<button class="btn-remove">X</button>';
-
-            div.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 10' : 'Weitere Gr\u00f6\u00dfe'}" value="${size}" min="1" class="simple-size">${removeButtonHtml}`;
-
-            const input = div.querySelector('input');
+        sizeInputs.forEach(({ index, input, removeButton }) => {
             input.addEventListener('input', () => {
                 this.appState.updateSimpleSeatSize(index, input.value);
             });
 
-            const removeButton = div.querySelector('.btn-remove');
             if (removeButton) {
                 removeButton.addEventListener('click', () => {
                     this.appState.removeSimpleSeatSize(index);
                     this.renderSimpleSizeInputs();
                 });
             }
-
-            this.DOM.simpleSizesContainer.appendChild(div);
         });
     }
 
@@ -825,68 +797,14 @@
 
     // ÃœBERARBEITET: Zeigt Ergebnisse fÃ¼r mehrere SitzgrÃ¶ÃŸen in Spalten an
     renderSimpleResults(results, proposalsData, totalVotes, simpleSizes) {
-        const table = this.DOM.simpleResultsTable;
-        table.innerHTML = ''; // LÃ¶scht alte Tabelle
-
-        // 1. Tabellenkopf (thead) erstellen
-        const thead = table.createTHead();
-        const headerRow = thead.insertRow();
-        headerRow.innerHTML = `<th>Farbe</th><th>Vorschlag / Liste</th><th>Stimmen</th><th>Anteil</th>`;
-        simpleSizes.forEach(size => {
-            headerRow.innerHTML += `<th style="text-align: center;">Sitze (${size})</th>`;
+        renderSimpleResultsTable({
+            table: this.DOM.simpleResultsTable,
+            tieNoteContainer: this.DOM.simpleTieNoteContainer,
+            results,
+            proposalsData,
+            totalVotes,
+            simpleSizes
         });
-
-        // 2. TabellenkÃ¶rper (tbody) erstellen
-        const tbody = table.createTBody();
-        const tieMessages = new Set();
-
-        proposalsData.filter(p => p.votes > 0).forEach(proposal => {
-            const row = tbody.insertRow();
-            const voteShare = totalVotes > 0 ? (proposal.votes / totalVotes * 100) : 0;
-
-            row.innerHTML = `
-                <td><div class="color-preview" style="background: ${proposal.color};"></div></td>
-                <td>${proposal.abbreviation}</td>
-                <td style="text-align: right;">${proposal.votes.toLocaleString('de-DE')}</td>
-                <td style="text-align: right;">${voteShare.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} %</td>
-            `;
-
-            // FÃ¼gt die Ergebnisse fÃ¼r jede SitzgrÃ¶ÃŸe hinzu
-            simpleSizes.forEach(size => {
-                const resultForSize = results[size];
-                const tie = resultForSize.tieInfo;
-                const partyResult = resultForSize.partyResults.find(p => p.id === proposal.id);
-                const baseSeats = partyResult ? partyResult.proportionalSeats : 0;
-
-                let cellContent = `${baseSeats}`;
-
-                if (tie && tie.partiesInvolved.includes(proposal.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
-
-                    const tiedPartyNames = tie.partiesInvolved
-                        .map(id => proposalsData.find(p => p.id === id)?.abbreviation || '')
-                        .join(', ');
-
-                    const message = `F\u00fcr die Verteilung von <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
-                    tieMessages.add(message);
-                }
-                row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
-            });
-        });
-
-        // 3. Los-Hinweise (tieInfo) anzeigen
-        if (tieMessages.size > 0) {
-            let finalNoteHTML = `<p><strong>âš ï¸ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
-            tieMessages.forEach(msg => {
-                finalNoteHTML += `<li>${msg}</li>`;
-            });
-            finalNoteHTML += '</ul>';
-            this.DOM.simpleTieNoteContainer.innerHTML = finalNoteHTML;
-            this.DOM.simpleTieNoteContainer.style.display = 'block';
-        } else {
-            this.DOM.simpleTieNoteContainer.style.display = 'none';
-        }
-
         this.DOM.simpleResultsSection.style.display = 'block';
     }
 
