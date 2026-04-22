@@ -84,7 +84,6 @@
         this.appState = new AppState();
         this.state = {
             councilResults: [],
-            factionAlliances: [],
             customColorMappings: [],
             currentPresetId: null // NEU
         };
@@ -1211,7 +1210,6 @@
 
     prepareCommitteeStep() {
         this.appState.clearCommitteeFactionAlliances();
-        this.state.factionAlliances = [];
         this.renderFraktionenForGemeinschaft();
     }
 
@@ -1238,22 +1236,19 @@
             color: gradientColor // Farbe im State speichern
         };
         this.appState.addCommitteeFactionAlliance(factionAlliance);
-        this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
         this.renderFraktionenForGemeinschaft();
     }
 
     dissolveFraktionsgemeinschaften() {
         this.appState.clearCommitteeFactionAlliances();
-        this.state.factionAlliances = [];
         this.renderFraktionenForGemeinschaft();
     }
 
     renderFraktionenForGemeinschaft() {
-        this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
         renderCommitteeFactionAllianceList(
             this.DOM.factionAllianceListElement,
             this.state.councilResults,
-            this.state.factionAlliances
+            this.appState.getCommitteeFactionAlliances()
         );
     }
 
@@ -1277,7 +1272,7 @@
         const committeeCalculation = this.committeeCalculator.calculate({
             committeeSizes,
             councilResults: this.state.councilResults,
-            factionAlliances: this.state.factionAlliances,
+            factionAlliances: this.appState.getCommitteeFactionAlliances(),
             manualVotes,
             mode
         });
@@ -1327,69 +1322,6 @@
         this.DOM.committeeResultsSection.style.display = 'block';
     }
 
-    /*calculateCommitteeSeats() {
-        const committeeSizes = Array.from(this.DOM.committeeSizesContainer.querySelectorAll('.committee-size'))
-            .map(input => parseInt(input.value))
-            .filter(val => !isNaN(val) && val > 0);
-
-        if (committeeSizes.length === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine g\u00fcltige Ausschussgr\u00f6\u00dfe an.</p>");
-            return;
-        }
-        const manualVotes = {};
-        this.DOM.votingStrengthContainer.querySelectorAll('.voting-item').forEach(item => { const partyId = item.dataset.partyId; const votes = parseInt(item.querySelector('input').value) || 0; manualVotes[partyId] = votes; });
-        const assignedFraktionIds = new Set(this.state.factionAlliances.flatMap(zg => zg.memberIds));
-        const unassignedMembers = this.state.councilResults.filter(m => m.seats > 0 && !assignedFraktionIds.has(m.id));
-        const remainingEinzelmitglieder = unassignedMembers.filter(member => (manualVotes[member.id] || 0) < 2);
-        let calculationBasis = [];
-        this.state.factionAlliances.forEach((zg, index) => {
-            const totalVotesForGemeinschaft = zg.memberIds.reduce((sum, id) => sum + (manualVotes[id] || 0), 0);
-            if (totalVotesForGemeinschaft > 0) {
-                calculationBasis.push({
-                    id: `zg-${index}`,
-                    abbreviation: zg.name,
-                    votes: totalVotesForGemeinschaft,
-                    seatsInCouncil: zg.totalSitze,
-                    color: zg.color || '#6c757d' // Gespeicherte Farbe verwenden
-                });
-            }
-        });
-        unassignedMembers.forEach(member => {
-            const memberVotes = manualVotes[member.id] || 0;
-            if (memberVotes >= 2) { calculationBasis.push({ id: member.id, abbreviation: member.abbreviation, votes: memberVotes, seatsInCouncil: member.seats, color: member.color }); }
-        });
-
-        const results = {};
-
-        // NEU: PrÃ¼fen, welcher Modus (Tab) aktiv ist
-        const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
-        const isZugriffsModus = activeCommitteeTab ? activeCommitteeTab.dataset.mode === 'dhondt' : false;
-
-        let allocator;
-        if (isZugriffsModus) {
-            allocator = new DHondtAllocator();
-            // Ã„ndere die Ãœberschrift im (potenziellen) Ergebnis-Abschnitt
-            this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Zugriffs-Reihenfolge (D'Hondt)";
-        } else {
-            allocator = new HareNiemeyerAllocator();
-            // Setze Ãœberschrift zurÃ¼ck
-            this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Ausschuss-Sitzverteilung";
-        }
-        // ENDE NEU
-
-        const totalCouncilSeatsForCommittees = calculationBasis.reduce((sum, basis) => sum + basis.votes, 0);
-
-        committeeSizes.forEach(size => {
-            if (totalCouncilSeatsForCommittees > 0) {
-                const result = allocator.calculate(calculationBasis, size, totalCouncilSeatsForCommittees);
-                results[size] = result;
-            } else {
-                results[size] = { partyResults: [], tieInfo: null };
-            }
-        });
-        this.renderCommitteeResults(results, calculationBasis, committeeSizes, remainingEinzelmitglieder);
-    }//*/
-
     renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder) {
         return renderCommitteeResultsTable({
             table: this.DOM.committeeResultsTable,
@@ -1399,101 +1331,6 @@
             individualMembers: einzelmitglieder
         });
     }
-
-    /*renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder) {
-        const table = this.DOM.committeeResultsTable;
-        table.innerHTML = '';
-        const thead = table.createTHead();
-        const headerRow = thead.insertRow();
-        headerRow.innerHTML = `<th>Fraktion / Fraktionsgem.</th><th>Sitze im Rat</th><th>Stimmen bei Wahl</th>`;
-        committeeSizes.forEach(size => {
-            headerRow.innerHTML += `<th style="text-align: center;">Ausschuss (${size} Sitze)</th>`;
-        });
-
-        const tbody = table.createTBody();
-        const tieMessages = new Set();
-
-        calculationBasis.forEach(basis => {
-            const row = tbody.insertRow();
-
-            // --- NEU: Hintergrund-Gradient fÃ¼r die erste Zelle ---
-            row.innerHTML = `
-                <td style="background: ${basis.color}; color: #FFFFFF; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
-                    ${basis.abbreviation}
-                </td>
-                <td style="text-align: right;">${basis.seatsInCouncil}</td>
-                <td style="text-align: right;">${basis.votes}</td>
-            `;
-            committeeSizes.forEach(size => {
-                const resultForSize = results[size];
-                const tie = resultForSize.tieInfo;
-                const partyResult = resultForSize.partyResults.find(p => p.id === basis.id);
-                const baseSeats = partyResult ? partyResult.proportionalSeats : 0;
-
-                let cellContent = `${baseSeats}`;
-
-                if (tie && tie.partiesInvolved.includes(basis.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
-
-                    const tiedPartyNames = tie.partiesInvolved
-                        .map(id => {
-                            const party = calculationBasis.find(b => b.id === id);
-                            return party ? party.abbreviation : '';
-                        })
-                        .join(', ');
-
-                    const message = `F\u00fcr den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
-                    tieMessages.add(message);
-                }
-
-                row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
-            });
-        });
-
-        let finalNoteHTML = '';
-        if (einzelmitglieder.length > 0) {
-            const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
-        }
-
-        if (tieMessages.size > 0) {
-            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
-            tieMessages.forEach(msg => {
-                finalNoteHTML += `<li>${msg}</li>`;
-            });
-            finalNoteHTML += '</ul>';
-        }
-
-        // --- NEUER BLOCK FÃœR LOTTERYINFOS (D'Hondt) ---
-        const allLotteryInfos = Object.values(results).flatMap(res => res.lotteryInfos || []);
-        if (allLotteryInfos.length > 0) {
-            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zu automatisch aufgelÃ¶sten Losentscheiden (D'Hondt):</strong></p><ul>`;
-
-            const uniqueLotteryMessages = new Set();
-            allLotteryInfos.forEach(info => {
-                const partyNames = info.partiesInvolved
-                    .map(id => calculationBasis.find(b => b.id === id)?.abbreviation || '')
-                    .join(', ');
-
-                const msg = `Ab **Sitz Nr. ${info.firstSeatNumber}** wurde ein Losentscheid (Gleichstand) zwischen **${partyNames}** automatisch per Sortierung (tempSortKey) aufgelÃ¶st. Bitte manuell prÃ¼fen!`;
-                uniqueLotteryMessages.add(msg);
-            });
-
-            uniqueLotteryMessages.forEach(msg => {
-                finalNoteHTML += `<li>${msg}</li>`;
-            });
-            finalNoteHTML += '</ul>';
-        }
-
-        if(finalNoteHTML) {
-            this.DOM.individualMembersNote.innerHTML = finalNoteHTML;
-            this.DOM.individualMembersNote.style.display = 'block';
-        } else {
-            this.DOM.individualMembersNote.style.display = 'none';
-        }
-
-        this.DOM.committeeResultsSection.style.display = 'block';
-    }//*/
 
     exportScenario() {
         const partiesData = this._getPartiesFromUI();
@@ -1820,7 +1657,6 @@
             this.appState.setCommitteeSeatSizes(committeeState.seatSizes);
             this.appState.setCommitteePresentVotes(committeeState.presentVotes);
             this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
-            this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
             this.renderCommitteeSizeInputs();
         }
 
@@ -1835,7 +1671,6 @@
 
             this.appState.setCommitteePresentVotes(committeeState.presentVotes);
             this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
-            this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
             this.renderCommitteeVotingInputs();
             this.renderFraktionenForGemeinschaft();
             this.updateTotalPresentVotes();
