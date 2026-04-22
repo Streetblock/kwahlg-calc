@@ -1130,22 +1130,32 @@
     }
 
     prepareVotingSimulation() {
-        this.DOM.votingStrengthContainer.innerHTML = '';
-        this.state.councilResults.filter(p => p.seats > 0).forEach(party => {
-            const div = document.createElement('div');
-            div.className = 'voting-item';
-            div.dataset.partyId = party.id;
-            div.innerHTML = `
-                <label for="vote-input-${party.id}">${party.abbreviation} (max. ${party.seats} Sitze)</label>
-                <input type="number" id="vote-input-${party.id}" value="${party.seats}" min="0" max="${party.seats}">
-            `;
-            this.DOM.votingStrengthContainer.appendChild(div);
-        });
+        const defaultPresentVotes = this.state.councilResults
+            .filter((party) => party.seats > 0)
+            .map((party) => ({ partyId: party.id, present: party.seats }));
+        this.appState.setCommitteePresentVotes(defaultPresentVotes);
+        this.renderCommitteeVotingInputs();
         this.updateTotalPresentVotes();
     }
+
+    renderCommitteeVotingInputs() {
+        const votingInputs = renderCommitteeVotingInputs(
+            this.DOM.votingStrengthContainer,
+            this.state.councilResults,
+            this.appState.getCommitteePresentVotes()
+        );
+
+        votingInputs.forEach(({ party, input }) => {
+            input.addEventListener('input', () => {
+                this.appState.updateCommitteePresentVote(party.id, parseInt(input.value, 10) || 0);
+                this.updateTotalPresentVotes();
+            });
+        });
+    }
+
     updateTotalPresentVotes() {
-        const totalVotes = Array.from(this.DOM.votingStrengthContainer.querySelectorAll('input'))
-            .reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+        const totalVotes = this.appState.getCommitteePresentVotes()
+            .reduce((sum, entry) => sum + (parseInt(entry.present, 10) || 0), 0);
         this.DOM.totalPresentVotes.textContent = totalVotes;
     }
 
@@ -1158,6 +1168,7 @@
     }
 
     prepareCommitteeStep() {
+        this.appState.clearCommitteeFactionAlliances();
         this.state.factionAlliances = [];
         this.renderFraktionenForGemeinschaft();
     }
@@ -1178,12 +1189,14 @@
         const gradientColor = this._createGradient(memberColors);
         // --- ENDE NEU ---
 
-        this.state.factionAlliances.push({
+        const factionAlliance = {
             name,
             totalSitze,
             memberIds,
             color: gradientColor // Farbe im State speichern
-        });
+        };
+        this.appState.addCommitteeFactionAlliance(factionAlliance);
+        this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
         this.renderFraktionenForGemeinschaft();
     }
 
@@ -1201,44 +1214,18 @@
         this.renderFraktionenForGemeinschaft();
     }*/
     dissolveFraktionsgemeinschaften() {
+        this.appState.clearCommitteeFactionAlliances();
         this.state.factionAlliances = [];
         this.renderFraktionenForGemeinschaft();
     }
 
     renderFraktionenForGemeinschaft() {
-        this.DOM.factionAllianceListElement.innerHTML = '';
-        const allMembers = this.state.councilResults.filter(p => p.seats > 0);
-        const assignedFraktionIds = new Set(this.state.factionAlliances.flatMap(zg => zg.memberIds));
-        this.state.factionAlliances.forEach(zg => {
-            const div = document.createElement('div');
-            div.className = 'fraktionsgemeinschaft';
-
-            // --- NEU: Hintergrund auf Gradient setzen ---
-            div.style.background = zg.color;
-            // --- ENDE NEU ---
-
-            // --- NEU: Header-Div fÃ¼r bessere Lesbarkeit (Textschatten) ---
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'fraktionsgemeinschaft-header';
-            headerDiv.textContent = `${zg.name} (${zg.totalSitze} Sitze)`;
-            headerDiv.style.color = '#FFFFFF'; // WeiÃŸer Text
-            headerDiv.style.textShadow = '1px 1px 3px rgba(0,0,0,0.7)'; // Schatten
-
-            div.innerHTML = ''; // Leeren
-            div.appendChild(headerDiv); // Neuen Header einfÃ¼gen
-            // --- ENDE NEU ---
-
-            this.DOM.factionAllianceListElement.appendChild(div);
-        });
-        const remainingMembers = allMembers.filter(m => !assignedFraktionIds.has(m.id));
-        if (remainingMembers.length > 0) {
-            const h5 = document.createElement('h5');
-            h5.textContent = 'Verbleibende Fraktionen / Mitglieder';
-            this.DOM.factionAllianceListElement.appendChild(h5);
-            remainingMembers.forEach(mitglied => {
-                this.DOM.factionAllianceListElement.appendChild(this._createFraktionListItem(mitglied));
-            });
-        }
+        this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
+        renderCommitteeFactionAllianceList(
+            this.DOM.factionAllianceListElement,
+            this.state.councilResults,
+            this.state.factionAlliances
+        );
     }
 
     /*renderFraktionenForGemeinschaft() {
@@ -1282,7 +1269,7 @@
 
         // --- Basisdaten sammeln (bleibt gleich) ---
         const manualVotes = {};
-        this.DOM.votingStrengthContainer.querySelectorAll('.voting-item').forEach(item => { const partyId = item.dataset.partyId; const votes = parseInt(item.querySelector('input').value) || 0; manualVotes[partyId] = votes; });
+        this.appState.getCommitteePresentVotes().forEach((entry) => { manualVotes[entry.partyId] = parseInt(entry.present, 10) || 0; });
 
         // PrÃ¼fen, welcher Modus (Tab) aktiv ist
         const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');

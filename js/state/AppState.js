@@ -8,6 +8,10 @@ class AppState {
             seatSizes: ['10'],
             proposals: []
         };
+        this.committee = {
+            presentVotes: [],
+            factionAlliances: []
+        };
     }
 
     getNrwParties() {
@@ -106,5 +110,51 @@ class AppState {
             return;
         }
         this.simple.seatSizes = this.simple.seatSizes.filter((_, seatIndex) => seatIndex !== index);
+    }
+
+    getCommitteePresentVotes() {
+        return this.committee.presentVotes.map((entry) => ({ ...entry }));
+    }
+
+    setCommitteePresentVotes(presentVotes) {
+        this.committee.presentVotes = (Array.isArray(presentVotes) ? presentVotes : []).map((entry) => ({ ...entry }));
+    }
+
+    updateCommitteePresentVote(partyId, presentVotes) {
+        const existing = this.committee.presentVotes.find((entry) => entry.partyId === partyId);
+        if (existing) {
+            existing.present = presentVotes;
+            return;
+        }
+
+        this.committee.presentVotes.push({
+            partyId,
+            present: presentVotes
+        });
+    }
+
+    getCommitteeFactionAlliances() {
+        return this.committee.factionAlliances.map((entry) => ({
+            ...entry,
+            memberIds: [...entry.memberIds]
+        }));
+    }
+
+    setCommitteeFactionAlliances(factionAlliances) {
+        this.committee.factionAlliances = (Array.isArray(factionAlliances) ? factionAlliances : []).map((entry) => ({
+            ...entry,
+            memberIds: [...entry.memberIds]
+        }));
+    }
+
+    addCommitteeFactionAlliance(factionAlliance) {
+        this.committee.factionAlliances.push({
+            ...factionAlliance,
+            memberIds: [...factionAlliance.memberIds]
+        });
+    }
+
+    clearCommitteeFactionAlliances() {
+        this.committee.factionAlliances = [];
     }
 }

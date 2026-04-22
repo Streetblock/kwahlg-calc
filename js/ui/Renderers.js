@@ -541,3 +541,79 @@ function renderCommitteeResultsTable(options) {
 
     return finalNoteHTML;
 }
+
+function renderCommitteeVotingInputs(container, councilResults, presentVotes) {
+    if (!container) return [];
+
+    container.innerHTML = '';
+
+    return councilResults
+        .filter((party) => party.seats > 0)
+        .map((party) => {
+            const voteEntry = presentVotes.find((entry) => entry.partyId === party.id);
+            const currentVotes = voteEntry ? voteEntry.present : party.seats;
+
+            const item = document.createElement('div');
+            item.className = 'voting-item';
+            item.dataset.partyId = party.id;
+            item.innerHTML = `
+                <label for="vote-input-${party.id}">${party.abbreviation} (max. ${party.seats} Sitze)</label>
+                <input type="number" id="vote-input-${party.id}" value="${currentVotes}" min="0" max="${party.seats}">
+            `;
+
+            container.appendChild(item);
+
+            return {
+                party,
+                item,
+                input: item.querySelector('input')
+            };
+        });
+}
+
+function renderCommitteeFactionAllianceList(container, councilResults, factionAlliances) {
+    if (!container) return [];
+
+    container.innerHTML = '';
+    const allMembers = councilResults.filter((party) => party.seats > 0);
+    const assignedFactionIds = new Set(factionAlliances.flatMap((alliance) => alliance.memberIds));
+
+    factionAlliances.forEach((alliance) => {
+        const allianceElement = document.createElement('div');
+        allianceElement.className = 'fraktionsgemeinschaft';
+        allianceElement.style.background = alliance.color;
+
+        const headerElement = document.createElement('div');
+        headerElement.className = 'fraktionsgemeinschaft-header';
+        headerElement.textContent = `${alliance.name} (${alliance.totalSitze} Sitze)`;
+        headerElement.style.color = '#FFFFFF';
+        headerElement.style.textShadow = '1px 1px 3px rgba(0,0,0,0.7)';
+
+        allianceElement.appendChild(headerElement);
+        container.appendChild(allianceElement);
+    });
+
+    const remainingMembers = allMembers.filter((member) => !assignedFactionIds.has(member.id));
+    const memberItems = [];
+
+    if (remainingMembers.length > 0) {
+        const heading = document.createElement('h5');
+        heading.textContent = 'Verbleibende Fraktionen / Mitglieder';
+        container.appendChild(heading);
+
+        remainingMembers.forEach((member) => {
+            const item = document.createElement('li');
+            item.className = 'fraktion-item';
+            item.dataset.fraktionId = member.id;
+            item.innerHTML = `<input type="checkbox" id="chk-${member.id}"><label for="chk-${member.id}">${member.abbreviation} (${member.seats} Sitze)</label>`;
+            container.appendChild(item);
+            memberItems.push({
+                member,
+                item,
+                checkbox: item.querySelector('input')
+            });
+        });
+    }
+
+    return memberItems;
+}
