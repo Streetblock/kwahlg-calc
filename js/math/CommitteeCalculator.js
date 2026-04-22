@@ -78,7 +78,7 @@ class CommitteeCalculator {
                     });
                 }
             } else {
-                results[size] = { partyResults: [], tieInfo: null, lotteryInfos: [], stepsLog: [], protocolEntries: [] };
+                results[size] = { partyResults: [], tieInfo: null, lotteryInfos: [], protocolEntries: [] };
 
                 if (mode === 'dhondt') {
                     protocolEntries.push({

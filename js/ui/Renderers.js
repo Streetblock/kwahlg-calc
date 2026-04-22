@@ -664,10 +664,14 @@ function renderProtocolEntry(entry) {
     if (!entry) return '';
 
     switch (entry.type) {
+        case 'separator':
+            return '<hr>';
         case 'heading':
             return `<h${entry.level || 6}>${escapeProtocolText(entry.text || '')}</h${entry.level || 6}>`;
         case 'paragraph':
             return `<p>${escapeProtocolText(entry.text || '')}</p>`;
+        case 'list-item':
+            return `<p>- ${escapeProtocolText(entry.text || '')}</p>`;
         case 'allocation-table': {
             const rows = (entry.rows || []).map((row) => `
                 <tr>
@@ -680,6 +684,20 @@ function renderProtocolEntry(entry) {
             `).join('');
             return `<h6>${escapeProtocolText(entry.title || '')}</h6><table class="protocol-table"><thead><tr><th>Sitz Nr.</th><th>Partei</th><th>Stimmen</th><th>Divisor</th><th>Quotient</th></tr></thead><tbody>${rows}</tbody></table>`;
         }
+        case 'hare-summary':
+            return `<h6>${escapeProtocolText(entry.title || '')}</h6><p>Gesamtstimmen: ${Number(entry.totalVotes || 0).toLocaleString('de-DE')}, Sitze: ${entry.totalSeats}, Quote (Stimmen/Sitz): ${Number(entry.quota || 0).toLocaleString('de-DE', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</p><p>Vergabe der <strong>${entry.seatsAllocatedSoFar}</strong> Sitze nach vollem Anspruch.</p>`;
+        case 'hare-table': {
+            const rows = (entry.rows || []).map((row) => `
+                <tr>
+                    <td style="background:${row.color}; color: var(--text-color); font-weight:bold; padding: 6px 8px;">${escapeProtocolText(row.abbreviation)}</td>
+                    <td>${Number(row.votes || 0).toLocaleString('de-DE')}</td>
+                    <td>${(Number(row.seats || 0) + Number(row.remainder || 0)).toLocaleString('de-DE', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+                    <td>${row.seats}</td>
+                    <td>${Number(row.remainder || 0).toLocaleString('de-DE', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+                </tr>
+            `).join('');
+            return `<table class="protocol-table"><thead><tr><th>Partei</th><th>Stimmen</th><th>Anspruch (Stimmen/Quote)</th><th>Ganze Sitze</th><th>Rest</th></tr></thead><tbody>${rows}</tbody></table>`;
+        }
         case 'lottery-info-list': {
             const items = (entry.items || []).map((item) => `<li><strong>Sitz Nr. ${item.firstSeatNumber}</strong>: ${escapeProtocolText(item.message || '')}</li>`).join('');
             return `<h6 style="color:var(--danger-color); margin-top:10px;">${escapeProtocolText(entry.title || '')}</h6><ul class="protocol-note" style="color:var(--danger-color); padding-left: 20px;">${items}</ul>`;
@@ -689,6 +707,11 @@ function renderProtocolEntry(entry) {
         default:
             return '';
     }
+}
+
+function renderProtocolEntries(container, protocolEntries) {
+    if (!container) return;
+    container.innerHTML = (protocolEntries || []).map((entry) => renderProtocolEntry(entry)).join('');
 }
 
 function renderCommitteeProtocol(container, protocolEntries) {

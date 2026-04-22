@@ -758,16 +758,17 @@
         }
 
         const results = {};
-        const allLogs = [];
+        const protocolEntries = [];
 
         // FÃ¼hrt Berechnung fÃ¼r jede GrÃ¶ÃŸe durch
         simpleSizes.forEach(size => {
             const result = allocator.calculate(proposalsData, size, totalVotes);
             results[size] = result;
-            allLogs.push(...(result.stepsLog || []));
+            protocolEntries.push(...(result.protocolEntries || []));
+            protocolEntries.push({ type: 'separator' });
         });
 
-        this.DOM.simpleAllocationSteps.innerHTML = allLogs.join('<hr>');
+        renderProtocolEntries(this.DOM.simpleAllocationSteps, protocolEntries);
         this.renderSimpleResults(results, proposalsData, totalVotes, simpleSizes);
 
         try {
@@ -1042,7 +1043,9 @@
         }));
 
         this.renderCouncilResults(this.state.councilResults, partiesData, true);
-        this.DOM.councilAllocationSteps.innerHTML = '<p>Die Ratssitze wurden direkt eingegeben. Es fand keine Berechnung statt.</p>';
+        renderProtocolEntries(this.DOM.councilAllocationSteps, [
+            { type: 'paragraph', text: 'Die Ratssitze wurden direkt eingegeben. Es fand keine Berechnung statt.' }
+        ]);
 
         this.DOM.councilResultsSection.style.display = 'block';
         this.DOM.votingSimulationSection.style.display = 'block';
@@ -1085,7 +1088,7 @@
 
         this.state.councilResults = result.allocatedParties;
         this.renderCouncilResults(result, partiesData, false);
-        this.DOM.councilAllocationSteps.innerHTML = result.stepsLog.join('');
+        renderProtocolEntries(this.DOM.councilAllocationSteps, result.protocolEntries);
 
         this.DOM.councilResultsSection.style.display = 'block';
         this.DOM.votingSimulationSection.style.display = 'block';
