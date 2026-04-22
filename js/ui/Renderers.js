@@ -264,7 +264,10 @@ function renderCouncilResultsTable(options) {
         detailsContainer,
         result,
         partyInputs,
-        isDirectMode = false
+        isDirectMode = false,
+        totalSeatsSummaryElement,
+        totalSeatsValueElement,
+        totalSeats = 0
     } = options;
 
     if (!tableBody || !resultsSection) return;
@@ -273,6 +276,11 @@ function renderCouncilResultsTable(options) {
     const tieInfo = result.tieInfo;
 
     tableBody.innerHTML = '';
+
+    if (totalSeatsSummaryElement && totalSeatsValueElement) {
+        totalSeatsValueElement.textContent = totalSeats.toLocaleString('de-DE');
+        totalSeatsSummaryElement.style.display = '';
+    }
 
     resultsSection.querySelector('[data-col="votes"]').style.display = isDirectMode ? 'none' : '';
     resultsSection.querySelector('[data-col="directMandatesAwarded"]').style.display = isDirectMode ? 'none' : '';

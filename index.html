@@ -392,6 +392,10 @@
 
         <div id="council-results-section" style="display: none;">
             <h3>Ergebnis der Ratswahl</h3>
+            <div id="council-total-seats-summary" style="display: none; margin-bottom: 15px; padding: 14px 16px; background: var(--highlight-color); border: 1px solid var(--border-color); border-radius: 10px;">
+                <strong>Errechnete Gesamtsitzzahl:</strong>
+                <span id="council-total-seats-value" style="font-size: 1.2em; margin-left: 8px;"></span>
+            </div>
             <!-- Container für horizontales Scrollen auf Mobilgeräten -->
             <div style="overflow-x: auto;">
                 <table id="councilResultsTable">
@@ -423,6 +427,7 @@
             </div>
             <div class="chart-wrapper">
                 <h3>Sitzverteilung (Rat)</h3>
+                <div id="nrw-seat-hemicycle-total" style="text-align: center; font-weight: 700; margin-bottom: 10px; color: var(--primary-color);"></div>
                 <div id="nrwSeatHemicycleDiagramContainer">
                     <svg id="nrwSeatHemicycleDiagram" viewBox="0 0 350 185" data-chart-type="hemicycle"></svg>
                 </div>

@@ -12,6 +12,8 @@
             calculateCouncilButton: document.getElementById('calculateCouncilButton'),
             councilResultsSection: document.getElementById('council-results-section'),
             councilResultsTableBody: document.querySelector('#councilResultsTable tbody'),
+            councilTotalSeatsSummary: document.getElementById('council-total-seats-summary'),
+            councilTotalSeatsValue: document.getElementById('council-total-seats-value'),
             councilAllocationSteps: document.getElementById('councilAllocationSteps'),
             votingSimulationSection: document.getElementById('voting-simulation-section'),
             votingStrengthContainer: document.getElementById('voting-strength-container'),
@@ -72,6 +74,7 @@
 
             // NEU: Chart-Container
             nrwChartsContainer: document.getElementById('nrw-charts-container'),
+            nrwSeatHemicycleTotal: document.getElementById('nrw-seat-hemicycle-total'),
             simpleChartsContainer: document.getElementById('simple-charts-container'),
 
             // NEU: Globaler Reset Button
@@ -1057,6 +1060,9 @@
             // Charts rendern (Stimmen-Balken wird leer sein, da keine Stimmen relevant)
             this.nrwVoteBarChartRenderer.render(this.state.councilResults, 0); // Keine Gesamtstimmen im Direktmodus
             this.nrwHemicycleRenderer.render(this.state.councilResults, totalSeatsForChart);
+            if (this.DOM.nrwSeatHemicycleTotal) {
+                this.DOM.nrwSeatHemicycleTotal.textContent = `Gesamtsitzzahl: ${totalSeatsForChart.toLocaleString('de-DE')}`;
+            }
             this.DOM.nrwChartsContainer.style.display = 'flex'; // Den Container sichtbar machen
         } catch (e) {
             console.error("Fehler beim Rendern der NRW-Diagramme (Direktmodus):", e);
@@ -1111,6 +1117,9 @@
             // Charts rendern
             this.nrwVoteBarChartRenderer.render(councilResultsWithVotes, totalVotesForChart);
             this.nrwHemicycleRenderer.render(councilResultsWithVotes, totalSeatsForChart);
+            if (this.DOM.nrwSeatHemicycleTotal) {
+                this.DOM.nrwSeatHemicycleTotal.textContent = `Gesamtsitzzahl: ${totalSeatsForChart.toLocaleString('de-DE')}`;
+            }
             this.DOM.nrwChartsContainer.style.display = 'flex'; // Den Container sichtbar machen
         } catch (e) {
             console.error("Fehler beim Rendern der NRW-Diagramme:", e);
@@ -1120,13 +1129,21 @@
     }
 
     renderCouncilResults(result, partyInputs, isDirectMode = false) {
+        const allocatedParties = result.allocatedParties || result;
+        const totalSeats = allocatedParties.reduce((sum, party) => sum + (party.seats || 0), 0);
+
+        this.currentResultsData = { totalSeats };
+
         renderCouncilResultsTable({
             tableBody: this.DOM.councilResultsTableBody,
             resultsSection: this.DOM.councilResultsSection,
             detailsContainer: document.getElementById('council-protocol-details'),
             result,
             partyInputs,
-            isDirectMode
+            isDirectMode,
+            totalSeatsSummaryElement: this.DOM.councilTotalSeatsSummary,
+            totalSeatsValueElement: this.DOM.councilTotalSeatsValue,
+            totalSeats
         });
     }
 
