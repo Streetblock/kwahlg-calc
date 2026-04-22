@@ -3,6 +3,7 @@
 class SainteLagueAllocator {
     calculate(partiesData, totalSeats, totalVotesIgnored) {
         const stepsLog = [];
+        const protocolEntries = [];
         const lotteryInfos = [];
         let tieInfo = null;
 
@@ -16,9 +17,9 @@ class SainteLagueAllocator {
         }))));
 
         let allocatedSeatsCount = 0;
-        if (totalSeats === 0) return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats })), stepsLog, lotteryInfos, tieInfo };
+        if (totalSeats === 0) return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats })), stepsLog, protocolEntries, lotteryInfos, tieInfo };
         const relevantParties = parties.filter(p => p.votes > 0);
-        if (relevantParties.length === 0) return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats })), stepsLog, lotteryInfos, tieInfo };
+        if (relevantParties.length === 0) return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats })), stepsLog, protocolEntries, lotteryInfos, tieInfo };
 
         const allocationTableData = [];
         let loopGuard = 0;
@@ -92,13 +93,26 @@ class SainteLagueAllocator {
         }
 
         const partyResults = parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats }));
-        return { partyResults, stepsLog: [tableHTML], lotteryInfos, tieInfo };
+        protocolEntries.push({
+            type: 'allocation-table',
+            method: 'sainte-lague',
+            title: `Sainte-Laguë/Schepers (für ${totalSeats} Sitze)`,
+            rows: allocationTableData
+        });
+        if (tieInfo) {
+            protocolEntries.push({
+                type: 'tie-note',
+                text: `Die Sitzvergabe wurde beim Stand von ${allocatedSeatsCount} Sitzen gestoppt. Für die verbleibenden ${tieInfo.seatsInContention} Sitze besteht ein unauflösbarer Gleichstand zwischen ${tieInfo.partiesInvolved.length} Parteien.`
+            });
+        }
+        return { partyResults, stepsLog: [tableHTML], protocolEntries, lotteryInfos, tieInfo };
     }
 }
 
 class DHondtAllocator {
     calculate(partiesData, totalSeats, totalVotesIgnored, options = {}) {
         // Der Allocator protokolliert jetzt standardmäßig alle auto-aufgelösten Lose.
+        const protocolEntries = [];
 
         const parties = JSON.parse(JSON.stringify(partiesData.map(p => ({...p, seats: 0, allocatedByLottery: false, potentiallyAffectedByLottery: false, tempSortKey: p.tempSortKey || p.id}))));
         let allocatedSeatsCount = 0;
@@ -106,9 +120,9 @@ class DHondtAllocator {
         const lotteryInfos = []; // HIER sammeln wir alle automatisch aufgelösten Lose
         let tieInfo = null;
 
-        if (totalSeats === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog: [], lotteryInfos, tieInfo, allocationTable: [] }; }
+        if (totalSeats === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog: [], protocolEntries, lotteryInfos, tieInfo, allocationTable: [] }; }
         const relevantParties = parties.filter(p => p.votes > 0);
-        if (relevantParties.length === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog: [], lotteryInfos, tieInfo, allocationTable: [] }; }
+        if (relevantParties.length === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog: [], protocolEntries, lotteryInfos, tieInfo, allocationTable: [] }; }
 
         let loopGuard = 0;
         const maxLoops = totalSeats * relevantParties.length + 100;
@@ -200,12 +214,30 @@ class DHondtAllocator {
         const partyResults = parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats}));
 
         // --- FINALES RETURN-STATEMENT ---
+        protocolEntries.push({
+            type: 'allocation-table',
+            method: 'dhondt',
+            title: `D'Hondt (für ${totalSeats} Sitze)`,
+            rows: allocationTableData
+        });
+        if (lotteryInfos.length > 0) {
+            protocolEntries.push({
+                type: 'lottery-info-list',
+                title: 'Protokoll der automatisch aufgelösten Losentscheide',
+                items: lotteryInfos.map((info) => ({
+                    firstSeatNumber: info.firstSeatNumber,
+                    message: info.message,
+                    partiesInvolved: info.partiesInvolved
+                }))
+            });
+        }
         return {
             partyResults,      // Die Summe (z.B. CDU: 10)
             allocationTable: allocationTableData, // Die Roh-Reihenfolge (Sitz 1: CDU...)
             lotteryInfos,      // Die Los-Warnungen
             tieInfo: null,       // Kein Hard-Stop
-            stepsLog: [tableHTML] // Das fertige HTML-Protokoll
+            stepsLog: [tableHTML], // Das fertige HTML-Protokoll
+            protocolEntries
         };
     }
 }
@@ -292,12 +324,13 @@ class HareNiemeyerAllocator {
     calculate(partiesData, totalSeats, totalVotes) {
         const parties = JSON.parse(JSON.stringify(partiesData.map(p => ({...p, seats: 0, remainder: 0, allocatedByLottery: false, potentiallyAffectedByLottery: false, tempSortKey: p.tempSortKey || Math.random()}))));
         const stepsLog = [];
+        const protocolEntries = [];
         const lotteryInfos = [];
         let tieInfo = null;
 
-        if (totalSeats === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog, lotteryInfos, tieInfo }; }
+        if (totalSeats === 0) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog, protocolEntries, lotteryInfos, tieInfo }; }
         const relevantParties = parties.filter(p => p.votes > 0);
-        if (totalVotes === 0 || relevantParties.length === 0 ) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog, lotteryInfos, tieInfo }; }
+        if (totalVotes === 0 || relevantParties.length === 0 ) { return { partyResults: parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats})), stepsLog, protocolEntries, lotteryInfos, tieInfo }; }
 
         const quota = totalVotes / totalSeats;
         let seatsAllocatedSoFar = 0;
@@ -376,7 +409,33 @@ class HareNiemeyerAllocator {
 
         const partyResults = parties.map(p => ({ id: p.id, abbreviation: p.abbreviation, color: p.color, proportionalSeats: p.seats }));
 
-        return { partyResults, stepsLog, lotteryInfos, tieInfo };
+        protocolEntries.push({
+            type: 'hare-summary',
+            title: `Hare-Niemeyer (für ${totalSeats} Sitze)`,
+            totalVotes,
+            totalSeats,
+            quota,
+            seatsAllocatedSoFar
+        });
+        protocolEntries.push({
+            type: 'hare-table',
+            rows: relevantParties.map((party) => ({
+                id: party.id,
+                abbreviation: party.abbreviation,
+                color: party.color,
+                votes: party.votes,
+                seats: party.seats,
+                remainder: party.remainder
+            }))
+        });
+        if (tieInfo) {
+            protocolEntries.push({
+                type: 'tie-note',
+                text: `Gleichstand für ${remainingSeatsToAllocate} Sitz(e) zwischen ${tieInfo.partiesInvolved.length} Parteien. Vergabe gestoppt.`
+            });
+        }
+
+        return { partyResults, stepsLog, protocolEntries, lotteryInfos, tieInfo };
     }
 }
 

@@ -1,4 +1,4 @@
-class AppController {
+﻿class AppController {
     constructor() {
         this.DOM = {
             appModeSelection: document.getElementById('app-mode-selection'),
@@ -36,7 +36,7 @@ class AppController {
             importVoteManagerFile: document.getElementById('importVoteManagerFile'),
 
             committeeCalcModeTabs: document.getElementById('committee-calc-mode-tabs'),
-            // NEU: IDs für Reset-Buttons
+            // NEU: IDs fÃ¼r Reset-Buttons
             resetVotesButton: document.getElementById('resetVotesButton'),
             resetProposalVotesButton: document.getElementById('resetProposalVotesButton'),
 
@@ -45,7 +45,7 @@ class AppController {
             partyItemHeader: document.querySelector('.party-item-header'),
             councilSizeGroup: document.getElementById('councilSize-group'),
 
-            // simple-seats entfernt, simple-sizes-container hinzugefügt
+            // simple-seats entfernt, simple-sizes-container hinzugefÃ¼gt
             simpleProcedure: document.getElementById('simple-procedure'),
             simpleSizesContainer: document.getElementById('simple-sizes-container'), // NEU
             addSimpleSizeBtn: document.getElementById('addSimpleSizeBtn'), // NEU
@@ -66,7 +66,7 @@ class AppController {
             csvModalTitle: document.getElementById('csv-modal-title'),
             csvModalBody: document.getElementById('csv-modal-body'),
 
-            // NEU: Tabs für Modus-Wahl
+            // NEU: Tabs fÃ¼r Modus-Wahl
             tabNrW: document.getElementById('tab-nrw'),
             tabSimple: document.getElementById('tab-simple'),
 
@@ -87,8 +87,8 @@ class AppController {
         };
 
         // NEU: storageKey definieren
-        this.storageKey = 'AusschussRechnerPro_State_v1'; // v1, falls wir die Struktur später ändern
-        this.isResetting = false; // NEU: Flag für Reset-Vorgang
+        this.storageKey = 'AusschussRechnerPro_State_v1'; // v1, falls wir die Struktur spÃ¤ter Ã¤ndern
+        this.isResetting = false; // NEU: Flag fÃ¼r Reset-Vorgang
 
         this.partyIdCounter = 0;
         this.proposalIdCounter = 0;
@@ -98,8 +98,8 @@ class AppController {
             'CDU': '#000000',
             'CSU': '#000000',
             'SPD': '#EB001F',
-            'GRÜNE': '#64A12D',
-            'DIE GRÜNEN': '#64A12D',
+            'GRÃœNE': '#64A12D',
+            'DIE GRÃœNEN': '#64A12D',
             'FDP': '#ffe209',// #FFED00',
             'DIE LINKE': '#BE3075',
             'LINKE': '#BE3075',
@@ -108,12 +108,12 @@ class AppController {
             'VOLT': '#502379',
             'DIE PARTEI': '#888888',
             'PARTEI': '#888888',
-            'FREIE WÄHLER': '#F9A825',
+            'FREIE WÃ„HLER': '#F9A825',
             'FW': '#F9A825',
-            // NEU: Weitere Parteien hinzugefügt
+            // NEU: Weitere Parteien hinzugefÃ¼gt
             'PIRATEN': '#FF8800', // Orange
-            'ÖDP': '#FF6600', // Dunkleres Orange
-            'TIERSCHUTZPARTEI': '#00545f' // Blaugrün/Teal #00AACC
+            'Ã–DP': '#FF6600', // Dunkleres Orange
+            'TIERSCHUTZPARTEI': '#00545f' // BlaugrÃ¼n/Teal #00AACC
         };
 
         // --- HIER DIE RENDERER INITIALISIEREN ---
@@ -122,20 +122,20 @@ class AppController {
 
         this.simpleVoteBarChartRenderer = new VoteBarChartRenderer('simpleVoteBarChart');
         this.simpleHemicycleRenderer = new HemicycleRenderer('simpleSeatHemicycleDiagram', 'simpleSeatHemicycleLegend');
-        // --- Ende Hinzufügung ---
+        // --- Ende HinzufÃ¼gung ---
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
         this.nrwCoalitionAnalyzer = new CoalitionAnalyzer(
-            'nrw-coalition-checklist', // Diese ID existiert (noch) nicht im HTML, fügt aber keinen Fehler hinzu
+            'nrw-coalition-checklist', // Diese ID existiert (noch) nicht im HTML, fÃ¼gt aber keinen Fehler hinzu
             'nrw-coalition-result',
             'nrw-auto-coalitions',
             'councilSize'
         );
 
         // KORREKTUR: Der 'simple-seats' Input existiert NICHT mehr.
-        // Das würde einen Fehler werfen und das Skript stoppen.
-        // Wir kommentieren es aus, behalten aber die Klasse (wie gewünscht).
+        // Das wÃ¼rde einen Fehler werfen und das Skript stoppen.
+        // Wir kommentieren es aus, behalten aber die Klasse (wie gewÃ¼nscht).
         /*
         this.simpleCoalitionAnalyzer = new CoalitionAnalyzer(
             'simple-coalition-checklist',
@@ -149,9 +149,9 @@ class AppController {
         this._bindEvents();
         this._populatePresetDropdown();
 
-        // NEU: Status laden, *bevor* wir die initialen Parteien hinzufügen
+        // NEU: Status laden, *bevor* wir die initialen Parteien hinzufÃ¼gen
         // _loadStateFromStorage wird die "clearAll" Methoden aufrufen.
-        // Wenn kein Status geladen wurde, fügen wir die Standard-Beispiele hinzu.
+        // Wenn kein Status geladen wurde, fÃ¼gen wir die Standard-Beispiele hinzu.
         const savedState = localStorage.getItem(this.storageKey);
         if (savedState) {
             this._loadStateFromStorage();
@@ -160,7 +160,7 @@ class AppController {
             this.loadPreset(PRESET_DATABASE.defaultPresetId);
             //this.addInitialParties();
 
-            // Die Initialisierung für den "Einfach"-Modus bleibt bestehen
+            // Die Initialisierung fÃ¼r den "Einfach"-Modus bleibt bestehen
             this.addInitialProposals();
 
         }
@@ -174,23 +174,23 @@ class AppController {
         this.DOM.tabNrW.addEventListener('click', () => this.switchAppMode('nrw'));
         this.DOM.tabSimple.addEventListener('click', () => this.switchAppMode('simple'));
 
-        // NEU: Event-Listener für das Preset-Dropdown
+        // NEU: Event-Listener fÃ¼r das Preset-Dropdown
         this.DOM.presetSelect.addEventListener('change', async (e) => { // async!
             const selectedPresetId = e.target.value;
 
-            // Warnung anzeigen, da dies die aktuellen Eingaben überschreibt
+            // Warnung anzeigen, da dies die aktuellen Eingaben Ã¼berschreibt
             const confirmed = await this._showConfirmationModal(
                 'Voreinstellung laden',
-                'Möchten Sie wirklich die Voreinstellung laden? Alle aktuell eingegebenen Parteien werden überschrieben.',
+                'M\u00f6chten Sie wirklich die Voreinstellung laden? Alle aktuell eingegebenen Parteien werden \u00fcberschrieben.',
                 'Laden',
                 'btn-danger' // Roter Lade-Button
             );
 
             if (confirmed) {
-                // Wenn bestätigt, das Preset laden
+                // Wenn bestÃ¤tigt, das Preset laden
                 this.loadPreset(selectedPresetId);
             } else {
-                // Wenn abgebrochen, das Dropdown auf das zuletzt geladene Preset zurücksetzen
+                // Wenn abgebrochen, das Dropdown auf das zuletzt geladene Preset zurÃ¼cksetzen
                 if (this.state.currentPresetId) {
                     this.DOM.presetSelect.value = this.state.currentPresetId;
                 }
@@ -199,9 +199,9 @@ class AppController {
 
         // --- Modus 1 (NRW) Events ---
         this.DOM.addPartyButton.addEventListener('click', () => this.addParty());
-        // GEÄNDERT: Event-Listener muss nun 'async' sein
+        // GEÃ„NDERT: Event-Listener muss nun 'async' sein
         this.DOM.clearPartiesButton.addEventListener('click', async () => await this.clearAllParties());
-        // NEU: Event-Listener für Reset-Button
+        // NEU: Event-Listener fÃ¼r Reset-Button
         this.DOM.resetVotesButton.addEventListener('click', () => this.resetAllVotes());
 
         this.DOM.calculateCouncilButton.addEventListener('click', () => this.calculateCouncilSeats());
@@ -211,7 +211,7 @@ class AppController {
         this.DOM.calculateCommitteesButton.addEventListener('click', () => this.calculateCommitteeSeats());
 
 
-        // NEU: Event-Listener für die NRW-Eingabemodus-Tabs
+        // NEU: Event-Listener fÃ¼r die NRW-Eingabemodus-Tabs
         this.DOM.nrwInputModeTabs.addEventListener('click', (e) => {
             const clickedTab = e.target.closest('.tab');
             if (clickedTab) {
@@ -238,10 +238,10 @@ class AppController {
         this.DOM.importVoteManagerBtn.addEventListener('click', () => this.DOM.importVoteManagerFile.click());
         this.DOM.importVoteManagerFile.addEventListener('change', (e) => this.importVoteManagerCSV(e));
 
-        // HINZUGEFÜGT: Event Listener für votingStrengthContainer
+        // HINZUGEFÃœGT: Event Listener fÃ¼r votingStrengthContainer
         this.DOM.votingStrengthContainer.addEventListener('input', () => this.updateTotalPresentVotes());
 
-        // NEU: Event-Listener für Ausschuss-Modus-Tabs
+        // NEU: Event-Listener fÃ¼r Ausschuss-Modus-Tabs
         if (this.DOM.committeeCalcModeTabs) {
             this.DOM.committeeCalcModeTabs.addEventListener('click', (e) => {
                 const clickedTab = e.target.closest('.tab');
@@ -266,33 +266,33 @@ class AppController {
         this.DOM.simpleProcedure.addEventListener('change', (e) => {
             this.appState.setSimpleProcedure(e.target.value);
         });
-        // GEÄNDERT: Event-Listener muss nun 'async' sein
+        // GEÃ„NDERT: Event-Listener muss nun 'async' sein
         this.DOM.clearProposalsButton.addEventListener('click', async () => await this.clearAllProposals());
-        // NEU: Event-Listener für Reset-Button
+        // NEU: Event-Listener fÃ¼r Reset-Button
         this.DOM.resetProposalVotesButton.addEventListener('click', () => this.resetAllProposalVotes());
 
         this.DOM.calculateSimpleButton.addEventListener('click', () => this.runSimpleCalculation());
-        // NEU: Event für Farb-Mapping-Modal
+        // NEU: Event fÃ¼r Farb-Mapping-Modal
         this.DOM.manageCustomColorsBtn.addEventListener('click', () => this.showColorMappingModal());
 
-        // NEU: Event-Listener für den globalen Reset
+        // NEU: Event-Listener fÃ¼r den globalen Reset
         if (this.DOM.resetApplicationButton) {
             this.DOM.resetApplicationButton.addEventListener('click', () => this.resetApplication());
         }
 
-        // NEU: Modal-Schließen-Event (KORRIGIERT)
+        // NEU: Modal-SchlieÃŸen-Event (KORRIGIERT)
         if (this.DOM.csvModalClose) { // Sicherstellen, dass das Element existiert
             // KORREKTUR: Dieser Listener wird jetzt vom Confirmation Modal verwaltet
-            // Wir binden hier nur den Standard-Schließ-Mechanismus
+            // Wir binden hier nur den Standard-SchlieÃŸ-Mechanismus
             this.DOM.csvModalClose.addEventListener('click', () => this._hideModal());
         }
 
         // NEU: Event-Listener zum Speichern des Status beim Verlassen der Seite
         window.addEventListener('beforeunload', this._saveStateToStorage.bind(this));
 
-        // NEU: Hinzufügen-Shortcut mit der '+' Taste
+        // NEU: HinzufÃ¼gen-Shortcut mit der '+' Taste
         document.addEventListener('keydown', (e) => {
-            // Nur auslösen, wenn '+' gedrückt wurde
+            // Nur auslÃ¶sen, wenn '+' gedrÃ¼ckt wurde
             if (e.key !== '+') return;
 
             // Verhindern, wenn der Fokus auf einem Eingabefeld liegt
@@ -304,7 +304,7 @@ class AppController {
             // Verhindern, dass das '+' in ein Feld geschrieben wird
             e.preventDefault();
 
-            // Prüfen, welcher Modus (Tab) aktiv ist
+            // PrÃ¼fen, welcher Modus (Tab) aktiv ist
             if (this.DOM.nrwModePanel.style.display !== 'none') {
                 this.addParty();
             } else if (this.DOM.simpleModePanel.style.display !== 'none') {
@@ -329,11 +329,11 @@ class AppController {
         }
     }
 
-    // NEU: Zeigt ein Modal mit "Bestätigen" und "Abbrechen" an
-    // Gibt ein Promise zurück, das mit true (bestätigt) oder false (abgebrochen) auflöst
+    // NEU: Zeigt ein Modal mit "BestÃ¤tigen" und "Abbrechen" an
+    // Gibt ein Promise zurÃ¼ck, das mit true (bestÃ¤tigt) oder false (abgebrochen) auflÃ¶st
     _showConfirmationModal(title, message, confirmButtonText = 'OK', confirmButtonClass = 'btn-danger') {
         return new Promise((resolve) => {
-            // HTML für den Modal-Body mit den Buttons
+            // HTML fÃ¼r den Modal-Body mit den Buttons
             const modalBodyHTML = `
                 <p>${message}</p>
                 <div class="modal-actions" style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -348,24 +348,24 @@ class AppController {
             // Referenzen zu den Elementen im Modal holen
             const btnConfirm = document.getElementById('modal-btn-confirm');
             const btnCancel = document.getElementById('modal-btn-cancel');
-            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-Schließ-Button oben rechts
+            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-SchlieÃŸ-Button oben rechts
 
-            // --- AKTUALISIERT: Handler für Tastatur-Events ---
+            // --- AKTUALISIERT: Handler fÃ¼r Tastatur-Events ---
             const keydownHandler = (e) => {
-                // Prüfen, ob die Enter-Taste gedrückt wurde
+                // PrÃ¼fen, ob die Enter-Taste gedrÃ¼ckt wurde
                 if (e.key === 'Enter') {
                     e.preventDefault(); // Verhindert Standard-Aktionen
-                    confirmHandler(); // Löst die Bestätigungs-Aktion aus
+                    confirmHandler(); // LÃ¶st die BestÃ¤tigungs-Aktion aus
                 }
-                // NEU: Prüfen, ob die Escape-Taste gedrückt wurde
-                else if (e.key === 'Escape' || e.key === 'Esc') { // 'Esc' für ältere Browser
+                // NEU: PrÃ¼fen, ob die Escape-Taste gedrÃ¼ckt wurde
+                else if (e.key === 'Escape' || e.key === 'Esc') { // 'Esc' fÃ¼r Ã¤ltere Browser
                     e.preventDefault();
-                    cancelHandler(); // Löst die Abbrechen-Aktion aus
+                    cancelHandler(); // LÃ¶st die Abbrechen-Aktion aus
                 }
             };
             // --- ENDE AKTUALISIERT ---
 
-            // Aufräumfunktion, um Event-Listener zu entfernen und das Modal zu schließen
+            // AufrÃ¤umfunktion, um Event-Listener zu entfernen und das Modal zu schlieÃŸen
             const cleanupAndResolve = (result) => {
                 btnConfirm.removeEventListener('click', confirmHandler);
                 btnCancel.removeEventListener('click', cancelHandler);
@@ -376,29 +376,29 @@ class AppController {
                 resolve(result);
             };
 
-            // Handler für "Bestätigen"
+            // Handler fÃ¼r "BestÃ¤tigen"
             const confirmHandler = () => {
-                cleanupAndResolve(true); // Promise mit "true" auflösen
+                cleanupAndResolve(true); // Promise mit "true" auflÃ¶sen
             };
 
-            // Handler für "Abbrechen" (gilt für "Abbrechen"-Button UND 'X'-Button)
+            // Handler fÃ¼r "Abbrechen" (gilt fÃ¼r "Abbrechen"-Button UND 'X'-Button)
             const cancelHandler = () => {
-                cleanupAndResolve(false); // Promise mit "false" auflösen
+                cleanupAndResolve(false); // Promise mit "false" auflÃ¶sen
             };
 
-            // Temporäre Event-Listener an die Buttons hängen
+            // TemporÃ¤re Event-Listener an die Buttons hÃ¤ngen
             btnConfirm.addEventListener('click', confirmHandler);
             btnCancel.addEventListener('click', cancelHandler);
             btnCloseX.addEventListener('click', cancelHandler);
 
-            // Tastatur-Listener zum Dokument hinzufügen
+            // Tastatur-Listener zum Dokument hinzufÃ¼gen
             document.addEventListener('keydown', keydownHandler);
         });
     }
 
     /*_showConfirmationModal(title, message, confirmButtonText = 'OK', confirmButtonClass = 'btn-danger') {
         return new Promise((resolve) => {
-            // HTML für den Modal-Body mit den Buttons
+            // HTML fÃ¼r den Modal-Body mit den Buttons
             const modalBodyHTML = `
                 <p>${message}</p>
                 <div class="modal-actions" style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -414,40 +414,40 @@ class AppController {
             // Referenzen zu den Elementen im Modal holen
             const btnConfirm = document.getElementById('modal-btn-confirm');
             const btnCancel = document.getElementById('modal-btn-cancel');
-            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-Schließ-Button oben rechts
+            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-SchlieÃŸ-Button oben rechts
 
-            // Aufräumfunktion, um Event-Listener zu entfernen und das Modal zu schließen
+            // AufrÃ¤umfunktion, um Event-Listener zu entfernen und das Modal zu schlieÃŸen
             // WICHTIG: Eigene Listener, um Konflikte mit dem Standard-Listener zu vermeiden
             const cleanupAndResolve = (result) => {
                 btnConfirm.removeEventListener('click', confirmHandler);
                 btnCancel.removeEventListener('click', cancelHandler);
-                // Wichtig: Wir müssen den *temporären* 'X'-Listener entfernen
+                // Wichtig: Wir mÃ¼ssen den *temporÃ¤ren* 'X'-Listener entfernen
                 btnCloseX.removeEventListener('click', cancelHandler);
                 this._hideModal();
                 resolve(result);
             };
 
-            // Handler für "Bestätigen"
+            // Handler fÃ¼r "BestÃ¤tigen"
             const confirmHandler = () => {
-                cleanupAndResolve(true); // Promise mit "true" auflösen
+                cleanupAndResolve(true); // Promise mit "true" auflÃ¶sen
             };
 
-            // Handler für "Abbrechen" (gilt für "Abbrechen"-Button UND 'X'-Button)
+            // Handler fÃ¼r "Abbrechen" (gilt fÃ¼r "Abbrechen"-Button UND 'X'-Button)
             const cancelHandler = () => {
-                cleanupAndResolve(false); // Promise mit "false" auflösen
+                cleanupAndResolve(false); // Promise mit "false" auflÃ¶sen
             };
 
-            // Temporäre Event-Listener an die Buttons hängen
+            // TemporÃ¤re Event-Listener an die Buttons hÃ¤ngen
             btnConfirm.addEventListener('click', confirmHandler);
             btnCancel.addEventListener('click', cancelHandler);
-            // Wir fügen einen *eigenen* Listener zum 'X' hinzu, der "Abbrechen" auslöst
-            // Dieser überschreibt nicht den Standard-Listener, wird aber zuerst ausgeführt
+            // Wir fÃ¼gen einen *eigenen* Listener zum 'X' hinzu, der "Abbrechen" auslÃ¶st
+            // Dieser Ã¼berschreibt nicht den Standard-Listener, wird aber zuerst ausgefÃ¼hrt
             btnCloseX.addEventListener('click', cancelHandler);
         });
     }//*/
 
     // ==========================================================
-    // NEUE / ÜBERARBEITETE METHODEN
+    // NEUE / ÃœBERARBEITETE METHODEN
     // ==========================================================
 
     switchAppMode(selectedMode) {
@@ -455,13 +455,13 @@ class AppController {
         if (selectedMode === 'nrw') {
             this.DOM.nrwModePanel.style.display = 'block';
             this.DOM.simpleModePanel.style.display = 'none';
-            // NEU: Active-Status für Tabs setzen
+            // NEU: Active-Status fÃ¼r Tabs setzen
             this.DOM.tabNrW.classList.add('active');
             this.DOM.tabSimple.classList.remove('active');
         } else {
             this.DOM.nrwModePanel.style.display = 'none';
             this.DOM.simpleModePanel.style.display = 'block';
-            // NEU: Active-Status für Tabs setzen
+            // NEU: Active-Status fÃ¼r Tabs setzen
             this.DOM.tabNrW.classList.remove('active');
             this.DOM.tabSimple.classList.add('active');
         }
@@ -485,7 +485,7 @@ class AppController {
     _updateColorFromName(name, colorPreviewEl, colorInputEl) {
         const upperName = name.toUpperCase().trim();
 
-        // 1. Prüfe Custom Mappings (höchste Priorität)
+        // 1. PrÃ¼fe Custom Mappings (hÃ¶chste PrioritÃ¤t)
         const customMapping = this.state.customColorMappings.find(m => m.name.toUpperCase() === upperName);
         if (customMapping) {
             colorPreviewEl.style.background = customMapping.color;
@@ -493,7 +493,7 @@ class AppController {
             return;
         }
 
-        // 2. Prüfe Standard-Mappings (partyColorMap)
+        // 2. PrÃ¼fe Standard-Mappings (partyColorMap)
         let singleColor = this.partyColorMap[upperName];
         if (singleColor) {
             colorPreviewEl.style.background = singleColor;
@@ -501,13 +501,13 @@ class AppController {
             return;
         }
 
-        // 3. Prüfe kombinierte Namen (z.B. "CDU/CSU")
+        // 3. PrÃ¼fe kombinierte Namen (z.B. "CDU/CSU")
         const splitNames = upperName.split(/[\/&+,]/);
         if (splitNames.length > 1) {
             const colors = splitNames
                 .map(n => {
                     const trimmedUpper = n.trim();
-                    // Prüfe Custom ODER Default Map
+                    // PrÃ¼fe Custom ODER Default Map
                     const custom = this.state.customColorMappings.find(m => m.name.toUpperCase() === trimmedUpper);
                     return custom ? custom.color : this.partyColorMap[trimmedUpper];
                 })
@@ -516,15 +516,15 @@ class AppController {
             if (colors.length > 0) {
                 const gradient = this._createGradient(colors);
                 colorPreviewEl.style.background = gradient;
-                colorInputEl.value = colors[0]; // Nimm die erste gefundene Farbe für den Picker
+                colorInputEl.value = colors[0]; // Nimm die erste gefundene Farbe fÃ¼r den Picker
                 return;
             }
         }
     }
 
     /**
-     * NEU: Lädt ein vordefiniertes Szenario aus der PRESET_DATABASE.
-     * Setzt die Ratsgröße und füllt die Parteiliste.
+     * NEU: LÃ¤dt ein vordefiniertes Szenario aus der PRESET_DATABASE.
+     * Setzt die RatsgrÃ¶ÃŸe und fÃ¼llt die Parteiliste.
      */
      loadPreset(presetId) {
         console.log(`Lade Preset: ${presetId}`);
@@ -541,13 +541,13 @@ class AppController {
             }
         }
 
-        // 1. UI-Elemente für NRW-Modus zurücksetzen
+        // 1. UI-Elemente fÃ¼r NRW-Modus zurÃ¼cksetzen
         this.clearAllParties(true);
 
-        // 2. Ratsgröße aus dem Preset setzen
+        // 2. RatsgrÃ¶ÃŸe aus dem Preset setzen
         this.DOM.councilSize.value = preset.councilSize;
 
-        // 3. Parteien aus dem Preset hinzufügen
+        // 3. Parteien aus dem Preset hinzufÃ¼gen
         if (preset.parties && Array.isArray(preset.parties)) {
             preset.parties.forEach(party => {
                 this.addParty(
@@ -567,14 +567,14 @@ class AppController {
     }
 
     /**
-     * NEU: Füllt das Dropdown-Menü für die Voreinstellungen
+     * NEU: FÃ¼llt das Dropdown-MenÃ¼ fÃ¼r die Voreinstellungen
      * basierend auf der PRESET_DATABASE.
      */
      _populatePresetDropdown() {
         if (!this.DOM.presetSelect) return;
         this.DOM.presetSelect.innerHTML = ''; // Vorherige Optionen leeren
 
-        // NEU: Option für den gespeicherten Zustand
+        // NEU: Option fÃ¼r den gespeicherten Zustand
         // Diese Option dient als Indikator.
         const savedOption = document.createElement('option');
         savedOption.value = 'user_saved_state'; // Eine eindeutige ID
@@ -588,7 +588,7 @@ class AppController {
         this.DOM.presetSelect.appendChild(separator);
 
 
-        // Einträge aus der Datenbank erstellen
+        // EintrÃ¤ge aus der Datenbank erstellen
         PRESET_DATABASE.presets.forEach(preset => {
             const option = document.createElement('option');
             option.value = preset.id;
@@ -628,14 +628,14 @@ class AppController {
         this.renderSimpleProposalList();
     }
 
-    // GEÄNDERT: Muss 'async' sein, um auf das Modal zu warten
+    // GEÃ„NDERT: Muss 'async' sein, um auf das Modal zu warten
     async clearAllProposals(skipConfirm = false) {
         if (!skipConfirm) {
             // Ruft das neue Modal auf und wartet auf die Antwort (true/false)
             const confirmed = await this._showConfirmationModal(
-                'Bestätigung erforderlich',
-                'Möchten Sie wirklich <strong>alle Vorschläge</strong> löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-                'Alle löschen',
+                'Best\u00e4tigung erforderlich',
+                'M\u00f6chten Sie wirklich <strong>alle Vorschl\u00e4ge</strong> l\u00f6schen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.',
+                'Alle l\u00f6schen',
                 'btn-danger'
             );
             if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
@@ -650,7 +650,7 @@ class AppController {
         this.renderSimpleProposalList();
     }
 
-    // NEU: Fügt ein weiteres Eingabefeld für die Sitzgröße hinzu
+    // NEU: FÃ¼gt ein weiteres Eingabefeld fÃ¼r die SitzgrÃ¶ÃŸe hinzu
     addSimpleSizeInput() {
         this.appState.addSimpleSeatSize('');
         this.renderSimpleSizeInputs();
@@ -730,7 +730,7 @@ class AppController {
                 ? ''
                 : '<button class="btn-remove">X</button>';
 
-            div.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 10' : 'Weitere Größe'}" value="${size}" min="1" class="simple-size">${removeButtonHtml}`;
+            div.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 10' : 'Weitere Gr\u00f6\u00dfe'}" value="${size}" min="1" class="simple-size">${removeButtonHtml}`;
 
             const input = div.querySelector('input');
             input.addEventListener('input', () => {
@@ -749,9 +749,9 @@ class AppController {
         });
     }
 
-    // ÜBERARBEITET: Führt Berechnung für mehrere Sitzgrößen durch
+    // ÃœBERARBEITET: FÃ¼hrt Berechnung fÃ¼r mehrere SitzgrÃ¶ÃŸen durch
     runSimpleCalculation() {
-        // Liest alle Sitzgrößen aus
+        // Liest alle SitzgrÃ¶ÃŸen aus
         const simpleSizes = this.appState.getSimpleSeatSizes()
             .map(value => parseInt(value, 10))
             .filter(val => !isNaN(val) && val > 0);
@@ -761,7 +761,7 @@ class AppController {
         const totalVotes = proposalsData.reduce((sum, p) => sum + p.votes, 0);
 
         if (proposalsData.length === 0 || simpleSizes.length === 0 || totalVotes === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte Vorschläge mit Stimmen und mindestens eine Sitzanzahl > 0 eingeben.</p>");
+            this._showModal("Eingabefehler", "<p>Bitte VorschlÃ¤ge mit Stimmen und mindestens eine Sitzanzahl > 0 eingeben.</p>");
             return;
         }
 
@@ -783,7 +783,7 @@ class AppController {
         const results = {};
         const allLogs = [];
 
-        // Führt Berechnung für jede Größe durch
+        // FÃ¼hrt Berechnung fÃ¼r jede GrÃ¶ÃŸe durch
         simpleSizes.forEach(size => {
             const result = allocator.calculate(proposalsData, size, totalVotes);
             results[size] = result;
@@ -795,14 +795,14 @@ class AppController {
 
         try {
             if (simpleSizes.length > 0) {
-                const firstSize = simpleSizes[0]; // Nimm die erste Sitzgröße für die Charts
+                const firstSize = simpleSizes[0]; // Nimm die erste SitzgrÃ¶ÃŸe fÃ¼r die Charts
                 const resultsForFirstSize = results[firstSize];
 
-                // Füge die Sitze zu den Eingabedaten hinzu
+                // FÃ¼ge die Sitze zu den Eingabedaten hinzu
                 const simpleDataForCharts = proposalsData.map(proposal => {
                     const partyResult = resultsForFirstSize.partyResults.find(p => p.id === proposal.id);
                     return {
-                        ...proposal, // enthält id, abbreviation, votes, color
+                        ...proposal, // enthÃ¤lt id, abbreviation, votes, color
                         seats: partyResult ? partyResult.proportionalSeats : 0
                     };
                 });
@@ -823,10 +823,10 @@ class AppController {
 
     }
 
-    // ÜBERARBEITET: Zeigt Ergebnisse für mehrere Sitzgrößen in Spalten an
+    // ÃœBERARBEITET: Zeigt Ergebnisse fÃ¼r mehrere SitzgrÃ¶ÃŸen in Spalten an
     renderSimpleResults(results, proposalsData, totalVotes, simpleSizes) {
         const table = this.DOM.simpleResultsTable;
-        table.innerHTML = ''; // Löscht alte Tabelle
+        table.innerHTML = ''; // LÃ¶scht alte Tabelle
 
         // 1. Tabellenkopf (thead) erstellen
         const thead = table.createTHead();
@@ -836,7 +836,7 @@ class AppController {
             headerRow.innerHTML += `<th style="text-align: center;">Sitze (${size})</th>`;
         });
 
-        // 2. Tabellenkörper (tbody) erstellen
+        // 2. TabellenkÃ¶rper (tbody) erstellen
         const tbody = table.createTBody();
         const tieMessages = new Set();
 
@@ -851,7 +851,7 @@ class AppController {
                 <td style="text-align: right;">${voteShare.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} %</td>
             `;
 
-            // Fügt die Ergebnisse für jede Sitzgröße hinzu
+            // FÃ¼gt die Ergebnisse fÃ¼r jede SitzgrÃ¶ÃŸe hinzu
             simpleSizes.forEach(size => {
                 const resultForSize = results[size];
                 const tie = resultForSize.tieInfo;
@@ -861,13 +861,13 @@ class AppController {
                 let cellContent = `${baseSeats}`;
 
                 if (tie && tie.partiesInvolved.includes(proposal.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> 🎲`;
+                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
 
                     const tiedPartyNames = tie.partiesInvolved
                         .map(id => proposalsData.find(p => p.id === id)?.abbreviation || '')
                         .join(', ');
 
-                    const message = `Für die Verteilung von <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
+                    const message = `F\u00fcr die Verteilung von <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
                     tieMessages.add(message);
                 }
                 row.innerHTML += `<td style="text-align: center; font-weight: bold; font-size: 1.1em;">${cellContent}</td>`;
@@ -876,7 +876,7 @@ class AppController {
 
         // 3. Los-Hinweise (tieInfo) anzeigen
         if (tieMessages.size > 0) {
-            let finalNoteHTML = `<p><strong>⚠️ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
+            let finalNoteHTML = `<p><strong>âš ï¸ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
             tieMessages.forEach(msg => {
                 finalNoteHTML += `<li>${msg}</li>`;
             });
@@ -891,27 +891,27 @@ class AppController {
     }
 
     // ==========================================================
-    // METHODEN FÜR MODUS 1 (NRW)
+    // METHODEN FÃœR MODUS 1 (NRW)
     // ==========================================================
 
     /*addInitialParties() {
-        // Daten basierend auf deiner vollständigen Liste:
+        // Daten basierend auf deiner vollstÃ¤ndigen Liste:
         this.addParty('CDU', 31834, 23, '#000000', 0);
         this.addParty('SPD', 27229, 10, '#EB001F', 0);
         this.addParty('AfD', 15079, 0, '#009EE0', 0);
-        this.addParty('GRÜNE', 8242, 0, '#64A12D', 0);
+        this.addParty('GRÃœNE', 8242, 0, '#64A12D', 0);
         this.addParty('Die Linke', 5382, 0, '#BE3075', 0);
         this.addParty('FDP', 2666, 0, '#ffe209', 0); // Verwendet FDP-Farbe aus der Map
         this.addParty('BSW', 2031, 0, '#BA1264', 0);
         this.addParty('Die PARTEI', 1865, 0, '#888888', 0);
         this.addParty('Volt', 1267, 0, '#502379', 0);
-        this.addParty('FREIE WÄHLER', 175, 0, '#F9A825', 0);
+        this.addParty('FREIE WÃ„HLER', 175, 0, '#F9A825', 0);
         this.addParty('dieBasis', 102, 0, '', 0); // Keine Standardfarbe, wird automatisch zugewiesen
         this.addParty('WerteUnion', 81, 0, '', 0); // Keine Standardfarbe, wird automatisch zugewiesen
 
-        // Erik Jansen (46 Stimmen) wird hier bewusst NICHT hinzugefügt,
-        // da er als Einzelbewerber nicht in den Verhältnisausgleich
-        // der Listen einfließt (§ 33 KWahlG NRW).
+        // Erik Jansen (46 Stimmen) wird hier bewusst NICHT hinzugefÃ¼gt,
+        // da er als Einzelbewerber nicht in den VerhÃ¤ltnisausgleich
+        // der Listen einflieÃŸt (Â§ 33 KWahlG NRW).
     } //*/
 
     addParty(name = '', votes = 0, directMandates = 0, color = '', seats = 0, id = null) {
@@ -935,30 +935,30 @@ class AppController {
             seats,
             isListApproved: true
         });
-        this.renderNrwPartyList();
+        this.renderNrwCouncilElectionPartyList();
     }
 
-    // GEÄNDERT: Muss 'async' sein, um auf das Modal zu warten
+    // GEÃ„NDERT: Muss 'async' sein, um auf das Modal zu warten
     async clearAllParties(skipConfirm = false) {
         if (!skipConfirm) {
             // Ruft das neue Modal auf und wartet auf die Antwort (true/false)
             const confirmed = await this._showConfirmationModal(
-                'Bestätigung erforderlich',
-                'Möchten Sie wirklich <strong>alle Parteien</strong> löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-                'Alle löschen',
+                'Best\u00e4tigung erforderlich',
+                'M\u00f6chten Sie wirklich <strong>alle Parteien</strong> l\u00f6schen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.',
+                'Alle l\u00f6schen',
                 'btn-danger'
             );
             if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
         }
         this.appState.clearNrwParties();
-        this.renderNrwPartyList();
+        this.renderNrwCouncilElectionPartyList();
     }
 
     // NEU: Setzt alle Stimmen im NRW-Modus auf 0
     resetAllVotes() {
-        // Für diese Aktion ist keine Bestätigung nötig, da sie nicht-destruktiv ist
+        // FÃ¼r diese Aktion ist keine BestÃ¤tigung nÃ¶tig, da sie nicht-destruktiv ist
         this.appState.resetNrwPartyVotes();
-        this.renderNrwPartyList();
+        this.renderNrwCouncilElectionPartyList();
     }
 
     _getPartiesFromUI() {
@@ -970,7 +970,7 @@ class AppController {
         return hexMatch ? hexMatch[0] : this.defaultColors[0];
     }
 
-    renderNrwPartyList() {
+    renderNrwCouncilElectionPartyList() {
         const parties = this.appState.getNrwParties();
         const isDirectMode = this._getNrwInputMode() === 'direct';
 
@@ -1034,7 +1034,7 @@ class AppController {
 
             partyDiv.querySelector('.btn-remove').addEventListener('click', () => {
                 this.appState.removeNrwParty(party.id);
-                this.renderNrwPartyList();
+                this.renderNrwCouncilElectionPartyList();
             });
 
             this.DOM.partyListElement.appendChild(partyDiv);
@@ -1066,11 +1066,11 @@ class AppController {
         });
 
         this.DOM.councilSizeGroup.style.display = isDirectMode ? 'none' : 'block';
-        this.DOM.calculateCouncilButton.textContent = isDirectMode ? 'Ratssitze übernehmen & weiter' : 'Ratssitze berechnen';
+        this.DOM.calculateCouncilButton.textContent = isDirectMode ? 'Ratssitze \u00fcbernehmen & weiter' : 'Ratssitze berechnen';
     }
 
     /**
-     * NEU: Schaltet die Tabs für den NRW-Eingabemodus (Berechnen vs. Direkt)
+     * NEU: Schaltet die Tabs fÃ¼r den NRW-Eingabemodus (Berechnen vs. Direkt)
      */
     switchNrwInputMode(clickedTab) {
         if (clickedTab.classList.contains('active')) {
@@ -1093,7 +1093,7 @@ class AppController {
     }
 
     /**
-     * NEU: Schaltet die Tabs für den Ausschuss-Berechnungsmodus (Hare vs D'Hondt)
+     * NEU: Schaltet die Tabs fÃ¼r den Ausschuss-Berechnungsmodus (Hare vs D'Hondt)
      */
     _switchCommitteeCalcMode(clickedTab) {
         if (clickedTab.classList.contains('active')) {
@@ -1109,7 +1109,7 @@ class AppController {
         // Neuen Tab aktivieren
         clickedTab.classList.add('active');
 
-        // Optional: Button-Text ändern
+        // Optional: Button-Text Ã¤ndern
         const newMode = clickedTab.dataset.mode;
         if (newMode === 'dhondt') {
             this.DOM.calculateCommitteesButton.textContent = "Zugriffsreihenfolge berechnen";
@@ -1134,10 +1134,10 @@ class AppController {
             id: p.id,
             abbreviation: p.abbreviation,
             color: p.color,
-            votes: p.votes, // Behalten wir, falls der Benutzer zurückschaltet
+            votes: p.votes, // Behalten wir, falls der Benutzer zurÃ¼ckschaltet
             seats: p.seats,
             directMandatesAwarded: 0, // Nicht zutreffend im Direktmodus
-            listSeatsAwarded: p.seats // Alle sind "Listenplätze"
+            listSeatsAwarded: p.seats // Alle sind "ListenplÃ¤tze"
         }));
 
         this.renderCouncilResults(this.state.councilResults, partiesData, true);
@@ -1150,9 +1150,9 @@ class AppController {
         this.prepareVotingSimulation();
         this.prepareCommitteeStep();
 
-        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÜGEN ---
+        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÃœGEN ---
         try {
-            // Daten für Charts vorbereiten
+            // Daten fÃ¼r Charts vorbereiten
             const totalSeatsForChart = this.state.councilResults.reduce((sum, p) => sum + p.seats, 0);
 
             // Charts rendern (Stimmen-Balken wird leer sein, da keine Stimmen relevant)
@@ -1170,13 +1170,13 @@ class AppController {
         const initialTotalSeats = parseInt(this.DOM.councilSize.value) || 0;
 
         if (partiesData.length === 0 || initialTotalSeats === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte fügen Sie Parteien hinzu und legen Sie die Ratsgröße fest.</p>");
+            this._showModal("Eingabefehler", "<p>Bitte f\u00fcgen Sie Parteien hinzu und legen Sie die Ratsgr\u00f6\u00dfe fest.</p>");
             return;
         }
 
         const totalVotesForProportionality = partiesData.reduce((sum, p) => sum + p.votes, 0);
 
-        const allocator = new NrwKWahlgCalculator(new SainteLagueAllocator());
+        const allocator = new NrwKWahlGCalculator(new SainteLagueAllocator());
         const result = allocator.calculate(partiesData, initialTotalSeats, totalVotesForProportionality, {});
 
         this.state.councilResults = result.allocatedParties;
@@ -1190,19 +1190,19 @@ class AppController {
         this.prepareVotingSimulation();
         this.prepareCommitteeStep();
 
-        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÜGEN ---
+        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÃœGEN ---
         try {
-            // Daten für Charts vorbereiten
+            // Daten fÃ¼r Charts vorbereiten
             const partiesDataForCharts = this._getPartiesFromUI(); // Holt Namen, Farben, Stimmen etc.
             let totalVotesForChart = 0;
 
-            // Füge die Stimmen zu den Ratsergebnissen hinzu
+            // FÃ¼ge die Stimmen zu den Ratsergebnissen hinzu
             const councilResultsWithVotes = this.state.councilResults.map(resultParty => {
                 const inputData = partiesDataForCharts.find(p => p.id === resultParty.id);
                 const votes = inputData ? inputData.votes : 0;
                 totalVotesForChart += votes;
                 return {
-                    ...resultParty, // enthält schon id, abbreviation, seats, color
+                    ...resultParty, // enthÃ¤lt schon id, abbreviation, seats, color
                     votes: votes
                 };
             });
@@ -1235,7 +1235,7 @@ class AppController {
             let totalSeatsCell = `<strong>${party.seats}</strong>`;
 
             if (tieInfo && tieInfo.partiesInvolved.includes(party.id)) {
-                totalSeatsCell = `<strong>${party.seats} + ${tieInfo.claimFraction}</strong> 🎲`;
+                totalSeatsCell = `<strong>${party.seats} + ${tieInfo.claimFraction}</strong> ðŸŽ²`;
             }
 
             const row = this.DOM.councilResultsTableBody.insertRow();
@@ -1268,7 +1268,7 @@ class AppController {
             tieNote.style.border = '1px solid var(--info-color)';
             tieNote.style.borderRadius = '8px';
             tieNote.style.marginTop = '15px';
-            tieNote.innerHTML = `<strong>⚠️ Hinweis zum Losverfahren:</strong> Für den nächsten Sitz besteht ein gleicher Anspruch zwischen <strong>${tiedPartyNames}</strong>. Das Endergebnis hängt von einem realen Losentscheid ab.`;
+            tieNote.innerHTML = `<strong>âš ï¸ Hinweis zum Losverfahren:</strong> FÃ¼r den nÃ¤chsten Sitz besteht ein gleicher Anspruch zwischen <strong>${tiedPartyNames}</strong>. Das Endergebnis hÃ¤ngt von einem realen Losentscheid ab.`;
 
             detailsContainer.parentNode.insertBefore(tieNote, detailsContainer);
         }
@@ -1297,7 +1297,7 @@ class AppController {
     addCommitteeSizeInput() {
         const div = document.createElement('div');
         div.className = 'committee-size-input';
-        div.innerHTML = `<input type="number" placeholder="Weitere Größe" class="committee-size"><button class="btn-remove">X</button>`;
+        div.innerHTML = `<input type="number" placeholder="Weitere Gr\u00f6\u00dfe" class="committee-size"><button class="btn-remove">X</button>`;
         div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
         this.DOM.committeeSizesContainer.appendChild(div);
     }
@@ -1310,7 +1310,7 @@ class AppController {
     createFraktionsgemeinschaft() {
         const selectedCheckboxes = this.DOM.factionAllianceListElement.querySelectorAll('input[type="checkbox"]:checked');
         if (selectedCheckboxes.length < 2) {
-            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder für eine Fraktionsgemeinschaft auswählen.</p>");
+            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder fÃ¼r eine Fraktionsgemeinschaft auswÃ¤hlen.</p>");
             return;
         }
         const memberIds = Array.from(selectedCheckboxes).map(chk => chk.closest('.fraktion-item').dataset.fraktionId);
@@ -1335,7 +1335,7 @@ class AppController {
     /*createFraktionsgemeinschaft() {
         const selectedCheckboxes = this.DOM.factionAllianceListElement.querySelectorAll('input[type="checkbox"]:checked');
         if (selectedCheckboxes.length < 2) {
-            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder für eine Fraktionsgemeinschaft auswählen.</p>");
+            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder fÃ¼r eine Fraktionsgemeinschaft auswÃ¤hlen.</p>");
             return;
         }
         const memberIds = Array.from(selectedCheckboxes).map(chk => chk.closest('.fraktion-item').dataset.fraktionId);
@@ -1362,15 +1362,15 @@ class AppController {
             div.style.background = zg.color;
             // --- ENDE NEU ---
 
-            // --- NEU: Header-Div für bessere Lesbarkeit (Textschatten) ---
+            // --- NEU: Header-Div fÃ¼r bessere Lesbarkeit (Textschatten) ---
             const headerDiv = document.createElement('div');
             headerDiv.className = 'fraktionsgemeinschaft-header';
             headerDiv.textContent = `${zg.name} (${zg.totalSitze} Sitze)`;
-            headerDiv.style.color = '#FFFFFF'; // Weißer Text
+            headerDiv.style.color = '#FFFFFF'; // WeiÃŸer Text
             headerDiv.style.textShadow = '1px 1px 3px rgba(0,0,0,0.7)'; // Schatten
 
             div.innerHTML = ''; // Leeren
-            div.appendChild(headerDiv); // Neuen Header einfügen
+            div.appendChild(headerDiv); // Neuen Header einfÃ¼gen
             // --- ENDE NEU ---
 
             this.DOM.factionAllianceListElement.appendChild(div);
@@ -1421,7 +1421,7 @@ class AppController {
             .filter(val => !isNaN(val) && val > 0);
 
         if (committeeSizes.length === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine gültige Ausschussgröße an.</p>");
+            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine g\u00fcltige Ausschussgr\u00f6\u00dfe an.</p>");
             return;
         }
 
@@ -1451,12 +1451,12 @@ class AppController {
         });
         // --- Ende Basisdaten ---
 
-        // Prüfen, welcher Modus (Tab) aktiv ist
+        // PrÃ¼fen, welcher Modus (Tab) aktiv ist
         const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
         const isZugriffsModus = activeCommitteeTab ? activeCommitteeTab.dataset.mode === 'dhondt' : false;
 
         const totalCouncilSeatsForCommittees = calculationBasis.reduce((sum, basis) => sum + basis.votes, 0);
-        let finalNoteHTML = ''; // Für die Einzelmitglieder-Warnung
+        let finalNoteHTML = ''; // FÃ¼r die Einzelmitglieder-Warnung
 
         if (isZugriffsModus) {
             // --- NEUER D'HONDT-PFAD (PROTOKOLL-ANZEIGE) ---
@@ -1468,25 +1468,25 @@ class AppController {
             this.DOM.committeeProtocolContainer.style.display = 'block';
             this.DOM.committeeProtocolContainer.innerHTML = ''; // Alten Inhalt leeren
 
-            // Berechne für JEDE Größe und hänge das Protokoll an
+            // Berechne fÃ¼r JEDE GrÃ¶ÃŸe und hÃ¤nge das Protokoll an
             committeeSizes.forEach(size => {
                 if (totalCouncilSeatsForCommittees > 0) {
                     const result = allocator.calculate(calculationBasis, size, totalCouncilSeatsForCommittees);
 
-                    // Das 'stepsLog[0]' enthält bereits die D'Hondt-Tabelle
+                    // Das 'stepsLog[0]' enthÃ¤lt bereits die D'Hondt-Tabelle
                     // UND das automatisch generierte Los-Protokoll am Ende.
                     this.DOM.committeeProtocolContainer.innerHTML += result.stepsLog[0];
                     this.DOM.committeeProtocolContainer.innerHTML += "<hr>";
 
                 } else {
-                    this.DOM.committeeProtocolContainer.innerHTML += `<h6>Protokoll für ${size} Sitze</h6><p>Keine Stimmen für die Berechnung vorhanden.</p><hr>`;
+                    this.DOM.committeeProtocolContainer.innerHTML += `<h6>Protokoll fÃ¼r ${size} Sitze</h6><p>Keine Stimmen fÃ¼r die Berechnung vorhanden.</p><hr>`;
                 }
             });
 
-            // Die Warnung für fraktionslose Mitglieder muss hier separat hinzugefügt werden
+            // Die Warnung fÃ¼r fraktionslose Mitglieder muss hier separat hinzugefÃ¼gt werden
             if (einzelmitglieder.length > 0) {
                  const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-                 finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gemäß § 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehören.</p>`;
+                 finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
             }
 
         } else {
@@ -1509,12 +1509,12 @@ class AppController {
             });
 
             // Rufe die Standard-Tabellen-Render-Funktion auf
-            // Diese Funktion erstellt die 'finalNoteHTML' selbst (inkl. Los-Warnungen für Hare)
-            // (Wir müssen 'einzelmitglieder' übergeben, damit 'renderCommitteeResults' es hat)
+            // Diese Funktion erstellt die 'finalNoteHTML' selbst (inkl. Los-Warnungen fÃ¼r Hare)
+            // (Wir mÃ¼ssen 'einzelmitglieder' Ã¼bergeben, damit 'renderCommitteeResults' es hat)
             finalNoteHTML = this.renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder);
         }
 
-        // --- Notiz-Box (für beide Modi) aktualisieren ---
+        // --- Notiz-Box (fÃ¼r beide Modi) aktualisieren ---
         if(finalNoteHTML) {
             this.DOM.individualMembersNote.innerHTML = finalNoteHTML;
             this.DOM.individualMembersNote.style.display = 'block';
@@ -1522,7 +1522,7 @@ class AppController {
             this.DOM.individualMembersNote.style.display = 'none';
         }
 
-        // In beiden Fällen: Ergebnisse anzeigen
+        // In beiden FÃ¤llen: Ergebnisse anzeigen
         this.DOM.committeeResultsSection.style.display = 'block';
     }
 
@@ -1532,7 +1532,7 @@ class AppController {
             .filter(val => !isNaN(val) && val > 0);
 
         if (committeeSizes.length === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine gültige Ausschussgröße an.</p>");
+            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine g\u00fcltige Ausschussgr\u00f6\u00dfe an.</p>");
             return;
         }
         const manualVotes = {};
@@ -1560,18 +1560,18 @@ class AppController {
 
         const results = {};
 
-        // NEU: Prüfen, welcher Modus (Tab) aktiv ist
+        // NEU: PrÃ¼fen, welcher Modus (Tab) aktiv ist
         const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
         const isZugriffsModus = activeCommitteeTab ? activeCommitteeTab.dataset.mode === 'dhondt' : false;
 
         let allocator;
         if (isZugriffsModus) {
             allocator = new DHondtAllocator();
-            // Ändere die Überschrift im (potenziellen) Ergebnis-Abschnitt
+            // Ã„ndere die Ãœberschrift im (potenziellen) Ergebnis-Abschnitt
             this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Zugriffs-Reihenfolge (D'Hondt)";
         } else {
             allocator = new HareNiemeyerAllocator();
-            // Setze Überschrift zurück
+            // Setze Ãœberschrift zurÃ¼ck
             this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Ausschuss-Sitzverteilung";
         }
         // ENDE NEU
@@ -1600,12 +1600,12 @@ class AppController {
         });
 
         const tbody = table.createTBody();
-        const tieMessages = new Set(); // Nur für Hare-Niemeyer 'tieInfo'
+        const tieMessages = new Set(); // Nur fÃ¼r Hare-Niemeyer 'tieInfo'
 
         calculationBasis.forEach(basis => {
             const row = tbody.insertRow();
 
-            // --- Hintergrund-Gradient für die erste Zelle ---
+            // --- Hintergrund-Gradient fÃ¼r die erste Zelle ---
             row.innerHTML = `
                 <td style="background: ${basis.color}; color: #FFFFFF; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
                     ${basis.abbreviation}
@@ -1622,7 +1622,7 @@ class AppController {
                 let cellContent = `${baseSeats}`;
 
                 if (tie && tie.partiesInvolved.includes(basis.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> 🎲`;
+                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
 
                     const tiedPartyNames = tie.partiesInvolved
                         .map(id => {
@@ -1631,7 +1631,7 @@ class AppController {
                         })
                         .join(', ');
 
-                    const message = `Für den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
+                    const message = `F\u00fcr den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
                     tieMessages.add(message);
                 }
 
@@ -1639,22 +1639,22 @@ class AppController {
             });
         });
 
-        // --- LOGIK GEÄNDERT: HTML-String wird gebaut und zurückgegeben ---
+        // --- LOGIK GEÃ„NDERT: HTML-String wird gebaut und zurÃ¼ckgegeben ---
         let finalNoteHTML = '';
         if (einzelmitglieder.length > 0) {
             const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gemäß § 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehören.</p>`;
+            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
         }
 
         if (tieMessages.size > 0) {
-            finalNoteHTML += `<hr><p><strong>⚠️ Hinweis(e) zum Losverfahren (Hare-Niemeyer):</strong></p><ul>`;
+            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zum Losverfahren (Hare-Niemeyer):</strong></p><ul>`;
             tieMessages.forEach(msg => {
                 finalNoteHTML += `<li>${msg}</li>`;
             });
             finalNoteHTML += '</ul>';
         }
 
-        // GEÄNDERT: Gib den HTML-String für die Notizen zurück
+        // GEÃ„NDERT: Gib den HTML-String fÃ¼r die Notizen zurÃ¼ck
         return finalNoteHTML;
     }
 
@@ -1674,7 +1674,7 @@ class AppController {
         calculationBasis.forEach(basis => {
             const row = tbody.insertRow();
 
-            // --- NEU: Hintergrund-Gradient für die erste Zelle ---
+            // --- NEU: Hintergrund-Gradient fÃ¼r die erste Zelle ---
             row.innerHTML = `
                 <td style="background: ${basis.color}; color: #FFFFFF; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
                     ${basis.abbreviation}
@@ -1691,7 +1691,7 @@ class AppController {
                 let cellContent = `${baseSeats}`;
 
                 if (tie && tie.partiesInvolved.includes(basis.id)) {
-                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> 🎲`;
+                    cellContent = `<strong>${baseSeats} + ${tie.claimFraction}</strong> ðŸŽ²`;
 
                     const tiedPartyNames = tie.partiesInvolved
                         .map(id => {
@@ -1700,7 +1700,7 @@ class AppController {
                         })
                         .join(', ');
 
-                    const message = `Für den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
+                    const message = `F\u00fcr den Ausschuss mit <strong>${size} Sitzen</strong> besteht ein Losentscheid um <strong>${tie.seatsInContention}</strong> Sitz(e) zwischen: <strong>${tiedPartyNames}</strong> (Anspruch: ${tie.claimFraction}).`;
                     tieMessages.add(message);
                 }
 
@@ -1711,21 +1711,21 @@ class AppController {
         let finalNoteHTML = '';
         if (einzelmitglieder.length > 0) {
             const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gemäß § 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehören.</p>`;
+            finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
         }
 
         if (tieMessages.size > 0) {
-            finalNoteHTML += `<hr><p><strong>⚠️ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
+            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zum Losverfahren:</strong></p><ul>`;
             tieMessages.forEach(msg => {
                 finalNoteHTML += `<li>${msg}</li>`;
             });
             finalNoteHTML += '</ul>';
         }
 
-        // --- NEUER BLOCK FÜR LOTTERYINFOS (D'Hondt) ---
+        // --- NEUER BLOCK FÃœR LOTTERYINFOS (D'Hondt) ---
         const allLotteryInfos = Object.values(results).flatMap(res => res.lotteryInfos || []);
         if (allLotteryInfos.length > 0) {
-            finalNoteHTML += `<hr><p><strong>⚠️ Hinweis(e) zu automatisch aufgelösten Losentscheiden (D'Hondt):</strong></p><ul>`;
+            finalNoteHTML += `<hr><p><strong>âš ï¸ Hinweis(e) zu automatisch aufgelÃ¶sten Losentscheiden (D'Hondt):</strong></p><ul>`;
 
             const uniqueLotteryMessages = new Set();
             allLotteryInfos.forEach(info => {
@@ -1733,7 +1733,7 @@ class AppController {
                     .map(id => calculationBasis.find(b => b.id === id)?.abbreviation || '')
                     .join(', ');
 
-                const msg = `Ab **Sitz Nr. ${info.firstSeatNumber}** wurde ein Losentscheid (Gleichstand) zwischen **${partyNames}** automatisch per Sortierung (tempSortKey) aufgelöst. Bitte manuell prüfen!`;
+                const msg = `Ab **Sitz Nr. ${info.firstSeatNumber}** wurde ein Losentscheid (Gleichstand) zwischen **${partyNames}** automatisch per Sortierung (tempSortKey) aufgelÃ¶st. Bitte manuell prÃ¼fen!`;
                 uniqueLotteryMessages.add(msg);
             });
 
@@ -1783,7 +1783,7 @@ class AppController {
         event.target.value = null;
     }
 
-    // ÜBERARBEITET: Import-Funktion für VoteManager (nutzt jetzt Modal)
+    // ÃœBERARBEITET: Import-Funktion fÃ¼r VoteManager (nutzt jetzt Modal)
     importVoteManagerCSV(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -1808,14 +1808,14 @@ class AppController {
                 const partyColumns = [];
                 // Speichert { districtName: '...', tiedParties: ['D1', 'D2'], votes: 123 }
                 let districtTies = [];
-                let gebietNameIndex = 4; // Standard-Index für 'gebiet-name'
+                let gebietNameIndex = 4; // Standard-Index fÃ¼r 'gebiet-name'
 
                 // --- 1. Finde alle Parteien-Spalten (D1, D2...) ---
                 headerTech.forEach((col, index) => {
                     const colTrimmed = col.trim();
                     const colNumPart = colTrimmed.substring(1);
 
-                    // KORRIGIERTE PRÜFUNG: Muss 'D' + Zahl sein (ignoriert 'D' selbst)
+                    // KORRIGIERTE PRÃœFUNG: Muss 'D' + Zahl sein (ignoriert 'D' selbst)
                     if (colTrimmed.startsWith('D') && colNumPart.length > 0 && !isNaN(colNumPart)) {
                         partyColumns.push({
                             index: index,
@@ -1825,23 +1825,23 @@ class AppController {
                         });
                     }
 
-                    // Finde die Spalte 'gebiet-name' für die Tie-Breaker-Meldung
+                    // Finde die Spalte 'gebiet-name' fÃ¼r die Tie-Breaker-Meldung
                     if (colTrimmed.toLowerCase() === 'gebiet-name') {
                         gebietNameIndex = index;
                     }
                 });
 
                 if (partyColumns.length === 0) {
-                    throw new Error("Keine gültigen Parteien-Spalten (D1, D2, ...) in der Header-Zeile gefunden.");
+                    throw new Error("Keine gÃ¼ltigen Parteien-Spalten (D1, D2, ...) in der Header-Zeile gefunden.");
                 }
 
                 // --- 2. Iteriere durch Wahlbezirke (Datenzeilen) ---
                 dataLines.forEach(line => {
                     const values = line.split(';');
-                    if (values.length < headerTech.length) return; // Unvollständige Zeilen überspringen
+                    if (values.length < headerTech.length) return; // UnvollstÃ¤ndige Zeilen Ã¼berspringen
 
                     let maxVotes = -1;
-                    let districtWinners = []; // Kann mehrere Einträge bei Gleichstand haben
+                    let districtWinners = []; // Kann mehrere EintrÃ¤ge bei Gleichstand haben
 
                     const districtName = values[gebietNameIndex] ? values[gebietNameIndex].trim() : 'Unbekannter Bezirk';
 
@@ -1850,12 +1850,12 @@ class AppController {
                         if (!voteValueStr) return; // Zelle ist leer
 
                         const voteValue = parseInt(voteValueStr, 10);
-                        if (isNaN(voteValue) || voteValue < 0) return; // Kein gültiger Wert
+                        if (isNaN(voteValue) || voteValue < 0) return; // Kein gÃ¼ltiger Wert
 
                         // A) Gesamtstimmen summieren
                         party.votes += voteValue;
 
-                        // B) Direktmandat für diesen Bezirk ermitteln
+                        // B) Direktmandat fÃ¼r diesen Bezirk ermitteln
                         if (voteValue > maxVotes) {
                             maxVotes = voteValue;
                             districtWinners = [party.id]; // Neuer alleiniger Gewinner
@@ -1883,14 +1883,14 @@ class AppController {
                 });
 
                 // --- 3. UI aktualisieren ---
-                this.clearAllParties(true); // Bestehende Parteien löschen
+                this.clearAllParties(true); // Bestehende Parteien lÃ¶schen
 
                 const anzahlWahlbezirke = dataLines.length;
                 if (anzahlWahlbezirke > 0) {
                     this.DOM.councilSize.value = anzahlWahlbezirke * 2;
                 }
 
-                // Füge nur Parteien hinzu, die auch Stimmen bekommen haben
+                // FÃ¼ge nur Parteien hinzu, die auch Stimmen bekommen haben
                 partyColumns.filter(p => p.votes > 0).forEach(party => {
                     this.addParty(
                         `Partei ${party.id}`, // Platzhaltername!
@@ -1900,7 +1900,7 @@ class AppController {
                     );
                 });
 
-                // --- 4. User über Ergebnis UND Losentscheide im MODAL informieren ---
+                // --- 4. User Ã¼ber Ergebnis UND Losentscheide im MODAL informieren ---
                 let totalMandatesFound = partyColumns.reduce((sum, p) => sum + p.directMandates, 0);
 
                 // Build HTML for modal
@@ -1917,7 +1917,7 @@ class AppController {
                     modalHTML += `<p><strong>2. WARNUNG: ${districtTies.length} LOSENTSCHEIDE SIND OFFEN!</strong></p>`;
                     modalHTML += "<p>In folgenden Wahlbezirken gab es einen Gleichstand. Diese Mandate wurden <strong>NOCH NICHT</strong> zugeteilt. Bitte addieren Sie die Gewinner-Mandate nach dem (realen) Losentscheid manuell in der UI:</p>";
 
-                    modalHTML += `<ul>`; // Innere Liste für die Bezirke
+                    modalHTML += `<ul>`; // Innere Liste fÃ¼r die Bezirke
                     districtTies.forEach(tie => {
                         modalHTML += `<li><strong>Bezirk '${tie.districtName}'</strong>: Gleichstand (${tie.votes} Stimmen) zwischen <strong>${tie.tiedParties.join(', ')}</strong></li>`;
                     });
@@ -1931,9 +1931,9 @@ class AppController {
 
             } catch (err) {
                 // Fehlerfall: Zeige Fehler im Modal
-                this._showModal("Import-Fehler", `<p style="color:var(--danger-color);">Ein Fehler ist aufgetreten:</p><p><strong>${err.message}</strong></p><p>Bitte prüfen Sie die Datei und das Format.</p>`);
+                this._showModal("Import-Fehler", `<p style="color:var(--danger-color);">Ein Fehler ist aufgetreten:</p><p><strong>${err.message}</strong></p><p>Bitte prÃ¼fen Sie die Datei und das Format.</p>`);
             } finally {
-                // File-Input zurücksetzen
+                // File-Input zurÃ¼cksetzen
                 event.target.value = null;
             }
         };
@@ -1949,7 +1949,7 @@ class AppController {
     }
 
 
-    // --- NEUE METHODEN FÜR LOCALSTORAGE ---
+    // --- NEUE METHODEN FÃœR LOCALSTORAGE ---
 
     /**
      * Speichert den gesamten UI-Zustand im localStorage.
@@ -1957,7 +1957,7 @@ class AppController {
      */
 
     _saveStateToStorage() {
-        // Nicht speichern, wenn ein Reset ausgelöst wurde
+        // Nicht speichern, wenn ein Reset ausgelÃ¶st wurde
         if (this.isResetting) {
               return;
         }
@@ -1970,21 +1970,21 @@ class AppController {
             }));
         };
 
-        // Das State-Objekt, das alles enthält, was wir speichern wollen
+        // Das State-Objekt, das alles enthÃ¤lt, was wir speichern wollen
         const state = {
-            // KORREKTUR 1: Den Query auf den Haupt-Tab-Container beschränkt
+            // KORREKTUR 1: Den Query auf den Haupt-Tab-Container beschrÃ¤nkt
             appMode: this.DOM.appModeSelection.querySelector('.tab.active').dataset.mode,
             nrwState: {
                 // KORREKTUR 2: Die Hilfsfunktion verwenden
                 inputMode: this._getNrwInputMode(),
                 councilSize: this.DOM.councilSize.value,
-                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurück
+                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurÃ¼ck
                 presentVotes: getPresentVotes() // Speichert die Anwesenheit
             },
             simpleState: {
                 procedure: this.appState.getSimpleProcedure(),
                 seatSizes: this.appState.getSimpleSeatSizes().filter(val => val.trim() !== ''),
-                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurück
+                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurÃ¼ck
             },
             customColorMappings: this.state.customColorMappings // NEU
         };
@@ -1999,7 +1999,7 @@ class AppController {
     }
 
     /*_saveStateToStorage() {
-        // Nicht speichern, wenn ein Reset ausgelöst wurde
+        // Nicht speichern, wenn ein Reset ausgelÃ¶st wurde
         if (this.isResetting) {
               return;
         }
@@ -2012,26 +2012,26 @@ class AppController {
             }));
         };
 
-        // Helfer-Funktion, um die "einfachen" Sitzgrößen auszulesen
+        // Helfer-Funktion, um die "einfachen" SitzgrÃ¶ÃŸen auszulesen
         const getSimpleSizes = () => {
              return Array.from(this.DOM.simpleSizesContainer.querySelectorAll('.simple-size'))
                 .map(input => input.value)
                 .filter(val => val.trim() !== '');
         };
 
-        // Das State-Objekt, das alles enthält, was wir speichern wollen
+        // Das State-Objekt, das alles enthÃ¤lt, was wir speichern wollen
         const state = {
             appMode: document.querySelector('.tab.active').dataset.mode,
             nrwState: {
                 inputMode: document.querySelector('input[name="input-mode"]:checked').value,
                 councilSize: this.DOM.councilSize.value,
-                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurück
+                parties: this._getPartiesFromUI(), // Diese Methode gibt bereits saubere Daten zurÃ¼ck
                 presentVotes: getPresentVotes() // Speichert die Anwesenheit
             },
             simpleState: {
                 procedure: this.DOM.simpleProcedure.value,
                 seatSizes: getSimpleSizes(),
-                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurück
+                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurÃ¼ck
             },
             customColorMappings: this.state.customColorMappings // NEU
         };
@@ -2046,7 +2046,7 @@ class AppController {
     }//*/
 
     /**
-     * NEU: Lädt den Zustand aus dem localStorage und stellt die UI wieder her.
+     * NEU: LÃ¤dt den Zustand aus dem localStorage und stellt die UI wieder her.
      * Wird beim Initialisieren des Controllers aufgerufen.
      */
     _loadStateFromStorage() {
@@ -2061,7 +2061,7 @@ class AppController {
             state = JSON.parse(savedState);
         } catch (e) {
             console.error("Gespeicherter Status konnte nicht geladen werden:", e);
-            localStorage.removeItem(this.storageKey); // Beschädigten Status entfernen
+            localStorage.removeItem(this.storageKey); // BeschÃ¤digten Status entfernen
             return;
         }
 
@@ -2071,23 +2071,23 @@ class AppController {
         if (state.nrwState) {
             this.clearAllParties(true); // UI und State leeren
             if (state.nrwState.parties && Array.isArray(state.nrwState.parties)) {
-                // Gespeicherte Parteien mit ihren IDs (!) wieder hinzufügen
+                // Gespeicherte Parteien mit ihren IDs (!) wieder hinzufÃ¼gen
                 state.nrwState.parties.forEach(p => {
                     this.addParty(p.abbreviation, p.votes, p.directMandates, p.color, p.seats, p.id);
                 });
             }
             this.DOM.councilSize.value = state.nrwState.councilSize || '66';
 
-            // Radio-Button für den Eingabemodus setzen
+            // Radio-Button fÃ¼r den Eingabemodus setzen
             /*const nrwMode = state.nrwState.inputMode || 'election';
             const radioEl = document.getElementById(`mode-${nrwMode}`);
             if (radioEl) {
                 radioEl.checked = true;
             }
-            this.toggleInputMode(nrwMode); // UI für den Modus anpassen
+            this.toggleInputMode(nrwMode); // UI fÃ¼r den Modus anpassen
             //*/
 
-            // Tab für den Eingabemodus setzen
+            // Tab fÃ¼r den Eingabemodus setzen
             const nrwMode = state.nrwState.inputMode || 'election';
             const tabEl = this.DOM.nrwInputModeTabs.querySelector(`.tab[data-mode="${nrwMode}"]`);
 
@@ -2096,7 +2096,7 @@ class AppController {
             this.DOM.nrwInputModeTabs.querySelector('.tab[data-mode="direct"]').classList.remove('active');
 
             if (tabEl) {
-                // Unsere neue Funktion kümmert sich um das Highlighting UND das Umschalten der UI
+                // Unsere neue Funktion kÃ¼mmert sich um das Highlighting UND das Umschalten der UI
                 this.switchNrwInputMode(tabEl);
             } else {
                 // Fallback, falls der Tab nicht gefunden wird
@@ -2109,7 +2109,7 @@ class AppController {
         if (state.simpleState) {
             this.clearAllProposals(true); // UI und State leeren
             if (state.simpleState.proposals && Array.isArray(state.simpleState.proposals)) {
-                // Gespeicherte Vorschläge mit ihren IDs (!) wieder hinzufügen
+                // Gespeicherte VorschlÃ¤ge mit ihren IDs (!) wieder hinzufÃ¼gen
                 state.simpleState.proposals.forEach(p => {
                     this.addProposal(p.abbreviation, p.votes, p.color, p.id);
                 });
@@ -2128,7 +2128,7 @@ class AppController {
         if (state.nrwState && state.nrwState.parties && state.nrwState.parties.length > 0 &&
             state.nrwState.presentVotes && state.nrwState.presentVotes.length > 0) {
 
-            // Schritt 1: Ratssitze (neu) berechnen. Das ist nötig, um die UI für "Anwesenheit" überhaupt erst aufzubauen.
+            // Schritt 1: Ratssitze (neu) berechnen. Das ist nÃ¶tig, um die UI fÃ¼r "Anwesenheit" Ã¼berhaupt erst aufzubauen.
             this.calculateCouncilSeats();
 
             // Schritt 2: Jetzt, wo die UI existiert, die gespeicherten Werte eintragen
@@ -2157,32 +2157,32 @@ class AppController {
     }
 
     // ==========================================================
-    // NEU: METHODEN FÜR CUSTOM COLOR MAPPING
+    // NEU: METHODEN FÃœR CUSTOM COLOR MAPPING
     // ==========================================================
 
     /**
      * Zeigt das Modal zur Verwaltung der eigenen Farb-Mappings an.
      */
     showColorMappingModal() {
-        // Container für den Modal-Inhalt erstellen
+        // Container fÃ¼r den Modal-Inhalt erstellen
         const container = document.createElement('div');
         container.id = 'custom-mappings-container';
         container.innerHTML = `
-            <p>Hier können Sie eigene Parteinamen (z.B. lokale Wählergruppen) und Farben definieren. Diese werden automatisch erkannt, wenn Sie den Namen in der Liste eintragen.</p>
+            <p>Hier kÃ¶nnen Sie eigene Parteinamen (z.B. lokale WÃ¤hlergruppen) und Farben definieren. Diese werden automatisch erkannt, wenn Sie den Namen in der Liste eintragen.</p>
             <p>Die Mappings werden in Ihrem Browser gespeichert.</p>
             <div id="custom-mappings-list">
-                <!-- Liste wird dynamisch befüllt -->
+                <!-- Liste wird dynamisch befÃ¼llt -->
             </div>
-            <button id="modal-add-mapping" class="btn-add" style="margin-top: 10px;">+ Neues Mapping hinzufügen</button>
+            <button id="modal-add-mapping" class="btn-add" style="margin-top: 10px;">+ Neues Mapping hinzufÃ¼gen</button>
             <div style="text-align: right; margin-top: 20px;">
-                <button id="modal-btn-close" class="btn-secondary">Schließen</button>
+                <button id="modal-btn-close" class="btn-secondary">SchlieÃŸen</button>
             </div>
         `;
 
         // Modal anzeigen (verwenden das existierende System)
         this._showModal('Eigene Farben verwalten', container.innerHTML);
 
-        // WICHTIG: Die Event-Listener erst *nach* dem Anzeigen des Modals hinzufügen,
+        // WICHTIG: Die Event-Listener erst *nach* dem Anzeigen des Modals hinzufÃ¼gen,
         // da _showModal den innerHTML neu setzt.
         document.getElementById('modal-add-mapping').addEventListener('click', () => {
             this.addCustomMapping();
@@ -2193,9 +2193,9 @@ class AppController {
             this._hideModal();
         });
 
-        // Wir müssen den 'X'-Button (csv-modal-close) neu binden,
-        // da _showModal keinen Promise-basierten Schließ-Mechanismus hat.
-        // Wir entfernen den alten Listener und fügen einen neuen hinzu, der nur schließt.
+        // Wir mÃ¼ssen den 'X'-Button (csv-modal-close) neu binden,
+        // da _showModal keinen Promise-basierten SchlieÃŸ-Mechanismus hat.
+        // Wir entfernen den alten Listener und fÃ¼gen einen neuen hinzu, der nur schlieÃŸt.
         const oldCloseBtn = this.DOM.csvModalClose;
         const newCloseBtn = oldCloseBtn.cloneNode(true);
         oldCloseBtn.parentNode.replaceChild(newCloseBtn, oldCloseBtn);
@@ -2219,7 +2219,7 @@ class AppController {
         listContainer.innerHTML = ''; // Liste leeren
 
         if (this.state.customColorMappings.length === 0) {
-            listContainer.innerHTML = '<p style="padding: 10px; text-align: center; color: var(--text-muted);">Keine eigenen Mappings. Klicken Sie auf "Hinzufügen".</p>';
+            listContainer.innerHTML = '<p style="padding: 10px; text-align: center; color: var(--text-muted);">Keine eigenen Mappings. Klicken Sie auf "HinzufÃ¼gen".</p>';
         }
 
         this.state.customColorMappings.forEach((mapping, index) => {
@@ -2239,21 +2239,21 @@ class AppController {
 
             listContainer.appendChild(mappingDiv);
 
-            // Event-Listener für dieses Item
+            // Event-Listener fÃ¼r dieses Item
             const colorPreview = mappingDiv.querySelector('.color-preview');
             const colorInput = mappingDiv.querySelector('.color-picker-hidden');
             const nameInput = mappingDiv.querySelector('.mapping-name');
             const colorText = mappingDiv.querySelector('.mapping-color-text');
             const removeBtn = mappingDiv.querySelector('.btn-remove');
 
-            // Farbe ändern (Picker)
+            // Farbe Ã¤ndern (Picker)
             colorInput.addEventListener('change', () => {
                 const newColor = colorInput.value;
                 colorPreview.style.background = newColor;
                 colorText.value = newColor;
                 this.updateCustomMapping(index, { color: newColor });
             });
-            // Farbe ändern (Textfeld)
+            // Farbe Ã¤ndern (Textfeld)
             colorText.addEventListener('input', () => {
                 const newColor = colorText.value;
                 // Einfache Validierung
@@ -2263,11 +2263,11 @@ class AppController {
                     this.updateCustomMapping(index, { color: newColor });
                 }
             });
-            // Name ändern
+            // Name Ã¤ndern
             nameInput.addEventListener('change', () => { // 'change' (beim Verlassen) statt 'input'
                 this.updateCustomMapping(index, { name: nameInput.value });
             });
-            // Löschen
+            // LÃ¶schen
             removeBtn.addEventListener('click', () => {
                 this.removeCustomMapping(index);
                 this.renderCustomMappingList(); // Liste neu zeichnen
@@ -2284,7 +2284,7 @@ class AppController {
     }
 
     /**
-     * Fügt ein leeres Mapping zum State hinzu.
+     * FÃ¼gt ein leeres Mapping zum State hinzu.
      */
     addCustomMapping() {
         this.state.customColorMappings.push({
@@ -2299,7 +2299,7 @@ class AppController {
     updateCustomMapping(index, updates) {
         if (this.state.customColorMappings[index]) {
             Object.assign(this.state.customColorMappings[index], updates);
-            // Sofortiges Speichern im LocalStorage bei Änderung
+            // Sofortiges Speichern im LocalStorage bei Ã„nderung
             this._saveStateToStorage();
         }
     }
@@ -2309,39 +2309,39 @@ class AppController {
      */
     removeCustomMapping(index) {
         this.state.customColorMappings.splice(index, 1);
-        // Sofortiges Speichern im LocalStorage bei Änderung
+        // Sofortiges Speichern im LocalStorage bei Ã„nderung
         this._saveStateToStorage();
     }
 
     /**
-     * NEU: Zeigt ein Modal und setzt die Anwendung zurück (löscht localStorage).
+     * NEU: Zeigt ein Modal und setzt die Anwendung zurÃ¼ck (lÃ¶scht localStorage).
      */
     async resetApplication() {
-        // 1. Zeige das Bestätigungs-Modal (wie gewünscht)
+        // 1. Zeige das BestÃ¤tigungs-Modal (wie gewÃ¼nscht)
         const confirmed = await this._showConfirmationModal(
-            'Anwendung zurücksetzen',
-            'Möchten Sie wirklich die gesamte Anwendung zurücksetzen? Alle gespeicherten Parteien, Vorschläge und Einstellungen werden gelöscht. Die Seite wird neu geladen und die Standard-Beispiele werden angezeigt.',
-            'Ja, jetzt zurücksetzen',
+            'Anwendung zur\u00fccksetzen',
+            'M\u00f6chten Sie wirklich die gesamte Anwendung zur\u00fccksetzen? Alle gespeicherten Parteien, Vorschl\u00e4ge und Einstellungen werden gel\u00f6scht. Die Seite wird neu geladen und die Standard-Beispiele werden angezeigt.',
+            'Ja, jetzt zur\u00fccksetzen',
             'btn-danger'
         );
 
-        // 2. Wenn der Benutzer bestätigt hat
+        // 2. Wenn der Benutzer bestÃ¤tigt hat
         if (confirmed) {
             try {
                 // Flag setzen, um 'beforeunload' zu blockieren
                 this.isResetting = true;
 
-                // 3. Den Schlüssel aus dem LocalStorage entfernen
+                // 3. Den SchlÃ¼ssel aus dem LocalStorage entfernen
                 localStorage.removeItem(this.storageKey);
 
                 // 4. Seite neu laden.
-                // (Dadurch wird der Konstruktor neu ausgeführt,
-                // findet keinen 'savedState' und lädt 'addInitialParties()')
+                // (Dadurch wird der Konstruktor neu ausgefÃ¼hrt,
+                // findet keinen 'savedState' und lÃ¤dt 'addInitialParties()')
                 location.reload();
 
             } catch (e) {
-                console.error("Fehler beim Zurücksetzen der Anwendung:", e);
-                this._showModal("Fehler", "Das Zurücksetzen ist fehlgeschlagen.");
+                console.error("Fehler beim ZurÃ¼cksetzen der Anwendung:", e);
+                this._showModal("Fehler", "Das Zur\u00fccksetzen ist fehlgeschlagen.");
             }
         }
     }
@@ -2350,7 +2350,7 @@ class AppController {
 }
   document.addEventListener('DOMContentLoaded', () => {
 
-    // --- NEU: Theme Switcher Logic (ANGEPASST FÜR DROPDOWN) ---
+    // --- NEU: Theme Switcher Logic (ANGEPASST FÃœR DROPDOWN) ---
     const themeSelect = document.getElementById('theme-select');
     const htmlElement = document.documentElement;
     const storageKey = 'theme-mode';
@@ -2365,7 +2365,7 @@ class AppController {
         localStorage.setItem(storageKey, theme);
     }
 
-    // 2. Event Listener für das Dropdown
+    // 2. Event Listener fÃ¼r das Dropdown
     if (themeSelect) {
         themeSelect.addEventListener('change', (e) => {
             applyTheme(e.target.value);
@@ -2377,7 +2377,7 @@ class AppController {
         const savedTheme = localStorage.getItem(storageKey) || 'auto';
         applyTheme(savedTheme);
 
-        // Den korrekten Wert im Dropdown auswählen
+        // Den korrekten Wert im Dropdown auswÃ¤hlen
         if (themeSelect) {
             themeSelect.value = savedTheme;
         }
@@ -2386,13 +2386,18 @@ class AppController {
     loadTheme();
     // --- Ende Theme Switcher Logic ---
 
-    // KORREKTUR: Globale "app"  Variable für Koalitions-Checker (falls benötigt)
+    // KORREKTUR: Globale "app"  Variable fÃ¼r Koalitions-Checker (falls benÃ¶tigt)
     // Wir deklarieren 'app' noch nicht im globalen Scope, damit die 'app.currentResultsData'
-    // Prüfungen im CoalitionAnalyzer (falls er später verwendet wird) funktionieren.
+    // PrÃ¼fungen im CoalitionAnalyzer (falls er spÃ¤ter verwendet wird) funktionieren.
     //window
 
     window.app = new AppController();
 });
+
+
+
+
+
 
 
 
