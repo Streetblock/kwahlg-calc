@@ -124,6 +124,8 @@
         this.simpleHemicycleRenderer = new HemicycleRenderer('simpleSeatHemicycleDiagram', 'simpleSeatHemicycleLegend');
         // --- Ende HinzufÃ¼gung ---
 
+        this.committeeCalculator = new CommitteeCalculator();
+
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
         this.nrwCoalitionAnalyzer = new CoalitionAnalyzer(
@@ -1281,90 +1283,49 @@
         // --- Basisdaten sammeln (bleibt gleich) ---
         const manualVotes = {};
         this.DOM.votingStrengthContainer.querySelectorAll('.voting-item').forEach(item => { const partyId = item.dataset.partyId; const votes = parseInt(item.querySelector('input').value) || 0; manualVotes[partyId] = votes; });
-        const assignedFraktionIds = new Set(this.state.factionAlliances.flatMap(zg => zg.memberIds));
-        const unassignedMembers = this.state.councilResults.filter(m => m.seats > 0 && !assignedFraktionIds.has(m.id));
-        const einzelmitglieder = unassignedMembers.filter(member => (manualVotes[member.id] || 0) < 2); // 'einzelmitglieder' hier definiert
-
-        let calculationBasis = [];
-        this.state.factionAlliances.forEach((zg, index) => {
-            const totalVotesForGemeinschaft = zg.memberIds.reduce((sum, id) => sum + (manualVotes[id] || 0), 0);
-            if (totalVotesForGemeinschaft > 0) {
-                calculationBasis.push({
-                    id: `zg-${index}`,
-                    abbreviation: zg.name,
-                    votes: totalVotesForGemeinschaft,
-                    seatsInCouncil: zg.totalSitze,
-                    color: zg.color || '#6c757d'
-                });
-            }
-        });
-        unassignedMembers.forEach(member => {
-            const memberVotes = manualVotes[member.id] || 0;
-            if (memberVotes >= 2) { calculationBasis.push({ id: member.id, abbreviation: member.abbreviation, votes: memberVotes, seatsInCouncil: member.seats, color: member.color }); }
-        });
-        // --- Ende Basisdaten ---
 
         // PrÃ¼fen, welcher Modus (Tab) aktiv ist
         const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
-        const isZugriffsModus = activeCommitteeTab ? activeCommitteeTab.dataset.mode === 'dhondt' : false;
-
-        const totalCouncilSeatsForCommittees = calculationBasis.reduce((sum, basis) => sum + basis.votes, 0);
+        const mode = activeCommitteeTab ? activeCommitteeTab.dataset.mode : 'hare';
+        const committeeCalculation = this.committeeCalculator.calculate({
+            committeeSizes,
+            councilResults: this.state.councilResults,
+            factionAlliances: this.state.factionAlliances,
+            manualVotes,
+            mode
+        });
         let finalNoteHTML = ''; // FÃ¼r die Einzelmitglieder-Warnung
 
-        if (isZugriffsModus) {
-            // --- NEUER D'HONDT-PFAD (PROTOKOLL-ANZEIGE) ---
-            const allocator = new DHondtAllocator();
-            this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Zugriffs-Reihenfolge (D'Hondt)";
+        this.DOM.committeeResultsSection.querySelector('h3').textContent = committeeCalculation.title;
 
+        if (committeeCalculation.displayMode === 'protocol') {
+            // --- NEUER D'HONDT-PFAD (PROTOKOLL-ANZEIGE) ---
             // UI umschalten: Protokoll AN, Tabelle AUS
             this.DOM.committeeTableWrapper.style.display = 'none';
             this.DOM.committeeProtocolContainer.style.display = 'block';
-            this.DOM.committeeProtocolContainer.innerHTML = ''; // Alten Inhalt leeren
-
-            // Berechne fÃ¼r JEDE GrÃ¶ÃŸe und hÃ¤nge das Protokoll an
-            committeeSizes.forEach(size => {
-                if (totalCouncilSeatsForCommittees > 0) {
-                    const result = allocator.calculate(calculationBasis, size, totalCouncilSeatsForCommittees);
-
-                    // Das 'stepsLog[0]' enthÃ¤lt bereits die D'Hondt-Tabelle
-                    // UND das automatisch generierte Los-Protokoll am Ende.
-                    this.DOM.committeeProtocolContainer.innerHTML += result.stepsLog[0];
-                    this.DOM.committeeProtocolContainer.innerHTML += "<hr>";
-
-                } else {
-                    this.DOM.committeeProtocolContainer.innerHTML += `<h6>Protokoll fÃ¼r ${size} Sitze</h6><p>Keine Stimmen fÃ¼r die Berechnung vorhanden.</p><hr>`;
-                }
-            });
+            this.DOM.committeeProtocolContainer.innerHTML = committeeCalculation.protocolHtml;
 
             // Die Warnung fÃ¼r fraktionslose Mitglieder muss hier separat hinzugefÃ¼gt werden
-            if (einzelmitglieder.length > 0) {
-                 const memberNames = einzelmitglieder.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
+            if (committeeCalculation.individualMembers.length > 0) {
+                 const memberNames = committeeCalculation.individualMembers.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
                  finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
             }
 
         } else {
             // --- ALTER HARE-NIEMEYER-PFAD (TABELLEN-ANZEIGE) ---
-            const allocator = new HareNiemeyerAllocator();
-            this.DOM.committeeResultsSection.querySelector('h3').textContent = "Ergebnis der Ausschuss-Sitzverteilung";
-
             // UI umschalten: Tabelle AN, Protokoll AUS
             this.DOM.committeeTableWrapper.style.display = 'block';
             this.DOM.committeeProtocolContainer.style.display = 'none';
 
-            const results = {};
-            committeeSizes.forEach(size => {
-                if (totalCouncilSeatsForCommittees > 0) {
-                    const result = allocator.calculate(calculationBasis, size, totalCouncilSeatsForCommittees);
-                    results[size] = result;
-                } else {
-                    results[size] = { partyResults: [], tieInfo: null };
-                }
-            });
-
             // Rufe die Standard-Tabellen-Render-Funktion auf
             // Diese Funktion erstellt die 'finalNoteHTML' selbst (inkl. Los-Warnungen fÃ¼r Hare)
             // (Wir mÃ¼ssen 'einzelmitglieder' Ã¼bergeben, damit 'renderCommitteeResults' es hat)
-            finalNoteHTML = this.renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder);
+            finalNoteHTML = this.renderCommitteeResults(
+                committeeCalculation.results,
+                committeeCalculation.calculationBasis,
+                committeeSizes,
+                committeeCalculation.individualMembers
+            );
         }
 
         // --- Notiz-Box (fÃ¼r beide Modi) aktualisieren ---

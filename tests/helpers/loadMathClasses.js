@@ -47,7 +47,20 @@ function loadNrwCalculator() {
     return { ...allocators, NrwKWahlGCalculator };
 }
 
+function loadCommitteeCalculator() {
+    const { context, ...allocators } = loadAllocators();
+    const committeePath = path.join(workspaceRoot, 'js', 'math', 'CommitteeCalculator.js');
+    const { CommitteeCalculator } = loadScript(
+        committeePath,
+        '{ CommitteeCalculator }',
+        context
+    );
+
+    return { ...allocators, CommitteeCalculator };
+}
+
 module.exports = {
     loadAllocators,
-    loadNrwCalculator
+    loadNrwCalculator,
+    loadCommitteeCalculator
 };

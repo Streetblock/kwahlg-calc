@@ -1,6 +1,7 @@
 const suites = [
     ...require('./allocators.test'),
-    ...require('./nrw-kwahlg.test')
+    ...require('./nrw-kwahlg.test'),
+    ...require('./committee-calculator.test')
 ];
 
 let failed = 0;
