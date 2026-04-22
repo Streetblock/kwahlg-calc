@@ -83,5 +83,56 @@ module.exports = [
             assert.ok(result.results[5]);
             assert.ok(result.results[7]);
         }
+    },
+    {
+        name: "CommitteeCalculator returns placeholder protocol entries for D'Hondt when no votes are available",
+        run() {
+            const calculator = new CommitteeCalculator();
+            const councilResults = [
+                { id: 'einzel', abbreviation: 'Einzel', seats: 1, color: '#666666' }
+            ];
+            const manualVotes = { einzel: 1 };
+
+            const result = calculator.calculate({
+                committeeSizes: [5],
+                councilResults,
+                factionAlliances: [],
+                manualVotes,
+                mode: 'dhondt'
+            });
+
+            assert.equal(result.totalVotes, 0);
+            assert.equal(result.protocolEntries.length, 1);
+            assert.equal(result.protocolEntries[0].type, 'committee-size-protocol');
+            assert.equal(result.protocolEntries[0].entries[1].type, 'paragraph');
+            assert.equal(result.protocolEntries[0].entries[1].text, 'Keine Stimmen f\u00fcr die Berechnung vorhanden.');
+        }
+    },
+    {
+        name: 'CommitteeCalculator keeps Hare mode focused on table results instead of protocol groups',
+        run() {
+            const calculator = new CommitteeCalculator();
+            const councilResults = [
+                { id: 'cdu', abbreviation: 'CDU', seats: 20, color: '#000000' },
+                { id: 'spd', abbreviation: 'SPD', seats: 15, color: '#eb001f' }
+            ];
+            const manualVotes = { cdu: 20, spd: 15 };
+
+            const result = calculator.calculate({
+                committeeSizes: [5],
+                councilResults,
+                factionAlliances: [],
+                manualVotes,
+                mode: 'hare'
+            });
+
+            assert.equal(result.displayMode, 'table');
+            assert.equal(result.title, 'Ergebnis der Ausschuss-Sitzverteilung');
+            assert.deepEqual(normalize(result.protocolEntries), []);
+            assert.deepEqual(
+                normalize(result.results[5].partyResults.map((party) => [party.id, party.proportionalSeats])),
+                [['cdu', 3], ['spd', 2]]
+            );
+        }
     }
 ];

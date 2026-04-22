@@ -48,6 +48,26 @@ module.exports = [
         }
     },
     {
+        name: "D'Hondt records automatically resolved ties in the structured protocol",
+        run() {
+            const allocator = new DHondtAllocator();
+            const parties = [
+                { id: 'a', abbreviation: 'A', color: '#111111', votes: 100, tempSortKey: 'A' },
+                { id: 'b', abbreviation: 'B', color: '#222222', votes: 100, tempSortKey: 'B' }
+            ];
+
+            const result = allocator.calculate(parties, 3, 200);
+
+            assert.deepEqual(
+                result.partyResults.map((party) => [party.id, party.proportionalSeats]),
+                [['a', 2], ['b', 1]]
+            );
+            assert.equal(result.lotteryInfos.length, 2);
+            assert.equal(result.protocolEntries[1].type, 'lottery-info-list');
+            assert.deepEqual(normalize(result.protocolEntries[1].items[0].partiesInvolved), ['a', 'b']);
+        }
+    },
+    {
         name: 'Hare-Niemeyer reports remainder ties when the final seat cannot be assigned uniquely',
         run() {
             const allocator = new HareNiemeyerAllocator();
