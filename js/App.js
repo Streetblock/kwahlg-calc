@@ -78,8 +78,8 @@ class AppController {
             resetApplicationButton: document.getElementById('resetApplicationButton')
         };
 
+        this.appState = new AppState();
         this.state = {
-            parties: [],
             proposals: [],
             councilResults: [],
             factionAlliances: [],
@@ -889,54 +889,16 @@ class AppController {
         }
 
         const partyColor = color || this.defaultColors[this.partyIdCounter % this.defaultColors.length];
-
-        const partyDiv = document.createElement('div');
-        partyDiv.className = 'party-item';
-        partyDiv.dataset.partyId = partyId;
-
-        partyDiv.innerHTML = `
-            <div class="color-input-wrapper">
-                <div class="color-preview" style="background: ${partyColor};"></div>
-                <input type="color" class="color-picker-hidden" value="${partyColor}">
-            </div>
-            <input type="text" placeholder="Parteiname" value="${name}" class="party-name">
-            <input type="number" placeholder="Stimmen" value="${votes}" min="0" style="text-align:right;" data-role="votes">
-            <input type="number" placeholder="Direktmandate" value="${directMandates}" min="0" style="text-align:right;" data-role="directMandates">
-            <input type="number" placeholder="Sitze" value="${seats}" min="0" style="text-align:right; display:none; grid-column: 3 / span 2;" data-role="seats">
-            <button class="btn-remove">X</button>
-        `;
-
-        const colorPreview = partyDiv.querySelector('.color-preview');
-        const colorInput = partyDiv.querySelector('.color-picker-hidden');
-        const nameInput = partyDiv.querySelector('.party-name');
-
-        colorPreview.addEventListener('click', () => colorInput.click());
-        colorInput.addEventListener('change', () => {
-            colorPreview.style.background = colorInput.value;
+        this.appState.addNrwParty({
+            id: partyId,
+            color: partyColor,
+            abbreviation: name,
+            votes,
+            directMandates,
+            seats,
+            isListApproved: true
         });
-
-        // NEU: Macht die Vorschau fokussierbar und per Tastatur bedienbar
-        colorPreview.tabIndex = 0;
-        colorPreview.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                colorInput.click();
-            }
-        });
-
-        nameInput.addEventListener('input', () => {
-             this._updateColorFromName(nameInput.value, colorPreview, colorInput);
-        });
-
-        partyDiv.querySelector('.btn-remove').addEventListener('click', (e) => {
-            e.target.closest('.party-item').remove();
-            this.state.parties = this.state.parties.filter(p => p.id !== partyId);
-        });
-
-        this.DOM.partyListElement.appendChild(partyDiv);
-        this.state.parties.push({ id: partyId, element: partyDiv });
-        // KORREKTUR (Refactored): Ruft die Hilfsfunktion auf, um den Modus zu ermitteln
-        this.toggleInputMode(this._getNrwInputMode());
+        this.renderNrwPartyList();
     }
 
     // GEÄNDERT: Muss 'async' sein, um auf das Modal zu warten
@@ -951,43 +913,97 @@ class AppController {
             );
             if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
         }
-        this.DOM.partyListElement.querySelectorAll('.party-item').forEach(el => el.remove());
-        this.state.parties = [];
+        this.appState.clearNrwParties();
+        this.renderNrwPartyList();
     }
 
     // NEU: Setzt alle Stimmen im NRW-Modus auf 0
     resetAllVotes() {
         // Für diese Aktion ist keine Bestätigung nötig, da sie nicht-destruktiv ist
-        this.DOM.partyListElement.querySelectorAll('.party-item').forEach(el => {
-            // Findet das Input-Feld für "Stimmen"
-            const votesInput = el.querySelector('input[data-role="votes"]');
-            if (votesInput) {
-                votesInput.value = 0;
-            }
-            // Optional auch Direktmandate zurücksetzen? Fürs Erste nur Stimmen.
-            const dmInput = el.querySelector('input[data-role="directMandates"]');
-            if (dmInput) {
-                dmInput.value = 0;
-            }
-        });
+        this.appState.resetNrwPartyVotes();
+        this.renderNrwPartyList();
     }
 
     _getPartiesFromUI() {
-        return Array.from(this.DOM.partyListElement.querySelectorAll('.party-item')).map(el => {
-            const colorPreview = el.querySelector('.color-preview');
-            const nameInput = el.querySelector('.party-name');
-            const inputs = el.querySelectorAll('input');
+        return this.appState.getNrwParties();
+    }
 
-            return {
-                id: el.dataset.partyId,
-                color: colorPreview.style.background,
-                abbreviation: nameInput.value,
-                votes: parseInt(inputs[2].value) || 0,
-                directMandates: parseInt(inputs[3].value) || 0,
-                seats: parseInt(inputs[4].value) || 0,
-                isListApproved: true
-            };
+    _getColorPickerValue(color) {
+        const hexMatch = typeof color === 'string' ? color.match(/#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/) : null;
+        return hexMatch ? hexMatch[0] : this.defaultColors[0];
+    }
+
+    renderNrwPartyList() {
+        const parties = this.appState.getNrwParties();
+        const isDirectMode = this._getNrwInputMode() === 'direct';
+
+        this.DOM.partyListElement.innerHTML = '';
+
+        parties.forEach((party) => {
+            const partyDiv = document.createElement('div');
+            partyDiv.className = 'party-item';
+            partyDiv.dataset.partyId = party.id;
+
+            partyDiv.innerHTML = `
+                <div class="color-input-wrapper">
+                    <div class="color-preview" style="background: ${party.color};"></div>
+                    <input type="color" class="color-picker-hidden" value="${this._getColorPickerValue(party.color)}">
+                </div>
+                <input type="text" placeholder="Parteiname" value="${party.abbreviation}" class="party-name">
+                <input type="number" placeholder="Stimmen" value="${party.votes}" min="0" style="text-align:right; display:${isDirectMode ? 'none' : 'block'};" data-role="votes">
+                <input type="number" placeholder="Direktmandate" value="${party.directMandates}" min="0" style="text-align:right; display:${isDirectMode ? 'none' : 'block'};" data-role="directMandates">
+                <input type="number" placeholder="Sitze" value="${party.seats}" min="0" style="text-align:right; display:${isDirectMode ? 'block' : 'none'}; grid-column: 3 / span 2;" data-role="seats">
+                <button class="btn-remove">X</button>
+            `;
+
+            const colorPreview = partyDiv.querySelector('.color-preview');
+            const colorInput = partyDiv.querySelector('.color-picker-hidden');
+            const nameInput = partyDiv.querySelector('.party-name');
+            const votesInput = partyDiv.querySelector('[data-role="votes"]');
+            const directMandatesInput = partyDiv.querySelector('[data-role="directMandates"]');
+            const seatsInput = partyDiv.querySelector('[data-role="seats"]');
+
+            colorPreview.addEventListener('click', () => colorInput.click());
+            colorPreview.tabIndex = 0;
+            colorPreview.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    colorInput.click();
+                }
+            });
+
+            colorInput.addEventListener('change', () => {
+                colorPreview.style.background = colorInput.value;
+                this.appState.updateNrwParty(party.id, { color: colorInput.value });
+            });
+
+            nameInput.addEventListener('input', () => {
+                this.appState.updateNrwParty(party.id, { abbreviation: nameInput.value });
+                this._updateColorFromName(nameInput.value, colorPreview, colorInput);
+                this.appState.updateNrwParty(party.id, { color: colorPreview.style.background });
+            });
+
+            votesInput.addEventListener('input', () => {
+                this.appState.updateNrwParty(party.id, { votes: parseInt(votesInput.value, 10) || 0 });
+            });
+
+            directMandatesInput.addEventListener('input', () => {
+                this.appState.updateNrwParty(party.id, { directMandates: parseInt(directMandatesInput.value, 10) || 0 });
+            });
+
+            seatsInput.addEventListener('input', () => {
+                this.appState.updateNrwParty(party.id, { seats: parseInt(seatsInput.value, 10) || 0 });
+            });
+
+            partyDiv.querySelector('.btn-remove').addEventListener('click', () => {
+                this.appState.removeNrwParty(party.id);
+                this.renderNrwPartyList();
+            });
+
+            this.DOM.partyListElement.appendChild(partyDiv);
         });
+
+        this.toggleInputMode(this._getNrwInputMode());
     }
 
     /**
