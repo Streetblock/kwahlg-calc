@@ -214,3 +214,110 @@ class CoalitionAnalyzer {
     }
 }
 
+function renderNrwCouncilElectionPartyList(container, parties, options = {}) {
+    const {
+        isDirectMode = false,
+        getColorPickerValue = (color) => color
+    } = options;
+
+    if (!container) return [];
+
+    container.innerHTML = '';
+
+    return parties.map((party) => {
+        const partyElement = document.createElement('div');
+        partyElement.className = 'party-item';
+        partyElement.dataset.partyId = party.id;
+
+        partyElement.innerHTML = `
+            <div class="color-input-wrapper">
+                <div class="color-preview" style="background: ${party.color};"></div>
+                <input type="color" class="color-picker-hidden" value="${getColorPickerValue(party.color)}">
+            </div>
+            <input type="text" placeholder="Parteiname" value="${party.abbreviation}" class="party-name">
+            <input type="number" placeholder="Stimmen" value="${party.votes}" min="0" style="text-align:right; display:${isDirectMode ? 'none' : 'block'};" data-role="votes">
+            <input type="number" placeholder="Direktmandate" value="${party.directMandates}" min="0" style="text-align:right; display:${isDirectMode ? 'none' : 'block'};" data-role="directMandates">
+            <input type="number" placeholder="Sitze" value="${party.seats}" min="0" style="text-align:right; display:${isDirectMode ? 'block' : 'none'}; grid-column: 3 / span 2;" data-role="seats">
+            <button class="btn-remove">X</button>
+        `;
+
+        container.appendChild(partyElement);
+
+        return {
+            party,
+            partyElement,
+            colorPreview: partyElement.querySelector('.color-preview'),
+            colorInput: partyElement.querySelector('.color-picker-hidden'),
+            nameInput: partyElement.querySelector('.party-name'),
+            votesInput: partyElement.querySelector('[data-role="votes"]'),
+            directMandatesInput: partyElement.querySelector('[data-role="directMandates"]'),
+            seatsInput: partyElement.querySelector('[data-role="seats"]'),
+            removeButton: partyElement.querySelector('.btn-remove')
+        };
+    });
+}
+
+function renderCouncilResultsTable(options) {
+    const {
+        tableBody,
+        resultsSection,
+        detailsContainer,
+        result,
+        partyInputs,
+        isDirectMode = false
+    } = options;
+
+    if (!tableBody || !resultsSection) return;
+
+    const allocatedParties = result.allocatedParties || result;
+    const tieInfo = result.tieInfo;
+
+    tableBody.innerHTML = '';
+
+    resultsSection.querySelector('[data-col="votes"]').style.display = isDirectMode ? 'none' : '';
+    resultsSection.querySelector('[data-col="directMandatesAwarded"]').style.display = isDirectMode ? 'none' : '';
+    resultsSection.querySelector('[data-col="listSeatsAwarded"]').style.display = isDirectMode ? 'none' : '';
+
+    allocatedParties.forEach((party) => {
+        const inputData = partyInputs.find((inputParty) => inputParty.id === party.id);
+        let totalSeatsCell = `<strong>${party.seats}</strong>`;
+
+        if (tieInfo && tieInfo.partiesInvolved.includes(party.id)) {
+            totalSeatsCell = `<strong>${party.seats} + ${tieInfo.claimFraction}</strong> 🎲`;
+        }
+
+        const row = tableBody.insertRow();
+        row.innerHTML = `
+            <td><div class="color-preview" style="background: ${party.color};"></div></td>
+            <td>${party.abbreviation}</td>
+            <td data-col="votes" style="display: ${isDirectMode ? 'none' : ''}">${(inputData?.votes || 0).toLocaleString('de-DE')}</td>
+            <td data-col="directMandatesAwarded" style="display: ${isDirectMode ? 'none' : ''}">${party.directMandatesAwarded}</td>
+            <td data-col="listSeatsAwarded" style="display: ${isDirectMode ? 'none' : ''}">${party.listSeatsAwarded}</td>
+            <td>${totalSeatsCell}</td>
+        `;
+    });
+
+    let tieNote = document.getElementById('council-tie-note');
+    if (tieNote) tieNote.remove();
+
+    if (!tieInfo || !detailsContainer) return;
+
+    const tiedPartyNames = tieInfo.partiesInvolved
+        .map((id) => {
+            const party = partyInputs.find((inputParty) => inputParty.id === id);
+            return party ? party.abbreviation : '';
+        })
+        .join(', ');
+
+    tieNote = document.createElement('div');
+    tieNote.id = 'council-tie-note';
+    tieNote.style.padding = '15px';
+    tieNote.style.backgroundColor = 'var(--light-blue)';
+    tieNote.style.border = '1px solid var(--info-color)';
+    tieNote.style.borderRadius = '8px';
+    tieNote.style.marginTop = '15px';
+    tieNote.innerHTML = `<strong>Hinweis zum Losverfahren:</strong> Für den nächsten Sitz besteht ein gleicher Anspruch zwischen <strong>${tiedPartyNames}</strong>. Das Endergebnis hängt von einem realen Losentscheid ab.`;
+
+    detailsContainer.parentNode.insertBefore(tieNote, detailsContainer);
+}
+
