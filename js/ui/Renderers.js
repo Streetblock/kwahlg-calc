@@ -617,3 +617,28 @@ function renderCommitteeFactionAllianceList(container, councilResults, factionAl
 
     return memberItems;
 }
+
+function renderCommitteeSizeInputList(container, seatSizes) {
+    if (!container) return [];
+
+    container.innerHTML = '<h4>Ausschussgrößen</h4>';
+
+    return seatSizes.map((size, index) => {
+        const sizeElement = document.createElement('div');
+        sizeElement.className = 'committee-size-input';
+
+        const removeButtonHtml = index === 0 && seatSizes.length === 1
+            ? ''
+            : '<button class="btn-remove">X</button>';
+
+        sizeElement.innerHTML = `<input type="number" placeholder="${index === 0 ? 'z.B. 19' : 'Weitere Größe'}" value="${size}" min="1" class="committee-size">${removeButtonHtml}`;
+        container.appendChild(sizeElement);
+
+        return {
+            index,
+            sizeElement,
+            input: sizeElement.querySelector('input'),
+            removeButton: sizeElement.querySelector('.btn-remove')
+        };
+    });
+}

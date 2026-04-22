@@ -9,6 +9,7 @@ class AppState {
             proposals: []
         };
         this.committee = {
+            seatSizes: ['19'],
             presentVotes: [],
             factionAlliances: []
         };
@@ -110,6 +111,33 @@ class AppState {
             return;
         }
         this.simple.seatSizes = this.simple.seatSizes.filter((_, seatIndex) => seatIndex !== index);
+    }
+
+    getCommitteeSeatSizes() {
+        return [...this.committee.seatSizes];
+    }
+
+    setCommitteeSeatSizes(seatSizes) {
+        this.committee.seatSizes = (Array.isArray(seatSizes) && seatSizes.length > 0)
+            ? seatSizes.map((size) => `${size}`)
+            : ['19'];
+    }
+
+    addCommitteeSeatSize(seatSize = '') {
+        this.committee.seatSizes.push(`${seatSize}`);
+    }
+
+    updateCommitteeSeatSize(index, seatSize) {
+        if (index < 0 || index >= this.committee.seatSizes.length) return;
+        this.committee.seatSizes[index] = `${seatSize}`;
+    }
+
+    removeCommitteeSeatSize(index) {
+        if (this.committee.seatSizes.length <= 1) {
+            this.committee.seatSizes = ['19'];
+            return;
+        }
+        this.committee.seatSizes = this.committee.seatSizes.filter((_, seatIndex) => seatIndex !== index);
     }
 
     getCommitteePresentVotes() {

@@ -168,6 +168,7 @@
         }
 
         this.renderSimpleSizeInputs();
+        this.renderCommitteeSizeInputs();
     }
 
     _bindEvents() {
@@ -1130,9 +1131,16 @@
     }
 
     prepareVotingSimulation() {
+        const existingPresentVotes = this.appState.getCommitteePresentVotes();
         const defaultPresentVotes = this.state.councilResults
             .filter((party) => party.seats > 0)
-            .map((party) => ({ partyId: party.id, present: party.seats }));
+            .map((party) => {
+                const existingVote = existingPresentVotes.find((entry) => entry.partyId === party.id);
+                return {
+                    partyId: party.id,
+                    present: existingVote ? existingVote.present : party.seats
+                };
+            });
         this.appState.setCommitteePresentVotes(defaultPresentVotes);
         this.renderCommitteeVotingInputs();
         this.updateTotalPresentVotes();
@@ -1160,11 +1168,28 @@
     }
 
     addCommitteeSizeInput() {
-        const div = document.createElement('div');
-        div.className = 'committee-size-input';
-        div.innerHTML = `<input type="number" placeholder="Weitere Gr\u00f6\u00dfe" class="committee-size"><button class="btn-remove">X</button>`;
-        div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
-        this.DOM.committeeSizesContainer.appendChild(div);
+        this.appState.addCommitteeSeatSize('');
+        this.renderCommitteeSizeInputs();
+    }
+
+    renderCommitteeSizeInputs() {
+        const sizeInputs = renderCommitteeSizeInputList(
+            this.DOM.committeeSizesContainer,
+            this.appState.getCommitteeSeatSizes()
+        );
+
+        sizeInputs.forEach(({ index, input, removeButton }) => {
+            input.addEventListener('input', () => {
+                this.appState.updateCommitteeSeatSize(index, input.value);
+            });
+
+            if (removeButton) {
+                removeButton.addEventListener('click', () => {
+                    this.appState.removeCommitteeSeatSize(index);
+                    this.renderCommitteeSizeInputs();
+                });
+            }
+        });
     }
 
     prepareCommitteeStep() {
@@ -1258,8 +1283,8 @@
     }
 
     calculateCommitteeSeats() {
-        const committeeSizes = Array.from(this.DOM.committeeSizesContainer.querySelectorAll('.committee-size'))
-            .map(input => parseInt(input.value))
+        const committeeSizes = this.appState.getCommitteeSeatSizes()
+            .map(value => parseInt(value, 10))
             .filter(val => !isNaN(val) && val > 0);
 
         if (committeeSizes.length === 0) {
@@ -1728,6 +1753,11 @@
                 seatSizes: this.appState.getSimpleSeatSizes().filter(val => val.trim() !== ''),
                 proposals: this._getProposalsFromUI() // Gibt saubere Daten zurÃ¼ck
             },
+            committeeState: {
+                seatSizes: this.appState.getCommitteeSeatSizes().filter(val => val.trim() !== ''),
+                presentVotes: this.appState.getCommitteePresentVotes(),
+                factionAlliances: this.appState.getCommitteeFactionAlliances()
+            },
             customColorMappings: this.state.customColorMappings // NEU
         };
 
@@ -1861,6 +1891,14 @@
             this.renderSimpleSizeInputs();
         }
 
+        if (state.committeeState) {
+            this.appState.setCommitteeSeatSizes(state.committeeState.seatSizes);
+            this.appState.setCommitteePresentVotes(state.committeeState.presentVotes);
+            this.appState.setCommitteeFactionAlliances(state.committeeState.factionAlliances);
+            this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
+            this.renderCommitteeSizeInputs();
+        }
+
         // --- 3. App-Modus (Tab) wiederherstellen ---
         const appMode = state.appMode || 'simple';
         this.switchAppMode(appMode);
@@ -1868,21 +1906,16 @@
         // --- 4. Anwesenheit (presentVotes) wiederherstellen ---
         // Dies tun wir nur, wenn im NRW-Modus Parteien geladen wurden UND Anwesenheitsdaten gespeichert waren.
         if (state.nrwState && state.nrwState.parties && state.nrwState.parties.length > 0 &&
-            state.nrwState.presentVotes && state.nrwState.presentVotes.length > 0) {
+            state.committeeState) {
 
             // Schritt 1: Ratssitze (neu) berechnen. Das ist nÃ¶tig, um die UI fÃ¼r "Anwesenheit" Ã¼berhaupt erst aufzubauen.
             this.calculateCouncilSeats();
 
-            // Schritt 2: Jetzt, wo die UI existiert, die gespeicherten Werte eintragen
-            state.nrwState.presentVotes.forEach(pv => {
-                // Finde das Input-Feld anhand der gespeicherten partyId
-                const input = this.DOM.votingStrengthContainer.querySelector(`.voting-item[data-party-id="${pv.partyId}"] input`);
-                if (input) {
-                    input.value = pv.present;
-                }
-            });
-
-            // Schritt 3: Die Summe der Anwesenden aktualisieren
+            this.appState.setCommitteePresentVotes(state.committeeState.presentVotes);
+            this.appState.setCommitteeFactionAlliances(state.committeeState.factionAlliances);
+            this.state.factionAlliances = this.appState.getCommitteeFactionAlliances();
+            this.renderCommitteeVotingInputs();
+            this.renderFraktionenForGemeinschaft();
             this.updateTotalPresentVotes();
         }
 
