@@ -127,6 +127,7 @@
         // --- Ende HinzufÃ¼gung ---
 
         this.committeeCalculator = new CommitteeCalculator();
+        this.nrwCouncilFlow = new NrwCouncilFlow(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -839,54 +840,21 @@
     } //*/
 
     addParty(name = '', votes = 0, directMandates = 0, color = '', seats = 0, id = null) {
-        const partyId = id || `party-${this.partyIdCounter++}`;
-
-        // NEU: Sicherstellen, dass der Counter bei geladenen IDs nicht kollidiert
-        if (id) {
-            const numericId = parseInt(id.split('-')[1]);
-            if (!isNaN(numericId) && numericId >= this.partyIdCounter) {
-                this.partyIdCounter = numericId + 1;
-            }
-        }
-
-        const partyColor = color || this.defaultColors[this.partyIdCounter % this.defaultColors.length];
-        this.appState.addNrwParty({
-            id: partyId,
-            color: partyColor,
-            abbreviation: name,
-            votes,
-            directMandates,
-            seats,
-            isListApproved: true
-        });
-        this.renderNrwCouncilElectionPartyList();
+        this.nrwCouncilFlow.addParty(name, votes, directMandates, color, seats, id);
     }
 
     // GEÃ„NDERT: Muss 'async' sein, um auf das Modal zu warten
     async clearAllParties(skipConfirm = false) {
-        if (!skipConfirm) {
-            // Ruft das neue Modal auf und wartet auf die Antwort (true/false)
-            const confirmed = await this._showConfirmationModal(
-                'Best\u00e4tigung erforderlich',
-                'M\u00f6chten Sie wirklich <strong>alle Parteien</strong> l\u00f6schen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.',
-                'Alle l\u00f6schen',
-                'btn-danger'
-            );
-            if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
-        }
-        this.appState.clearNrwParties();
-        this.renderNrwCouncilElectionPartyList();
+        await this.nrwCouncilFlow.clearAllParties(skipConfirm);
     }
 
     // NEU: Setzt alle Stimmen im NRW-Modus auf 0
     resetAllVotes() {
-        // FÃ¼r diese Aktion ist keine BestÃ¤tigung nÃ¶tig, da sie nicht-destruktiv ist
-        this.appState.resetNrwPartyVotes();
-        this.renderNrwCouncilElectionPartyList();
+        this.nrwCouncilFlow.resetAllVotes();
     }
 
     _getPartiesFromUI() {
-        return this.appState.getNrwParties();
+        return this.nrwCouncilFlow.getParties();
     }
 
     _getColorPickerValue(color) {
@@ -895,103 +863,25 @@
     }
 
     renderNrwCouncilElectionPartyList() {
-        const parties = this.appState.getNrwParties();
-        const isDirectMode = this._getNrwInputMode() === 'direct';
-
-        const partyBindings = renderNrwCouncilElectionPartyList(this.DOM.partyListElement, parties, {
-            isDirectMode,
-            getColorPickerValue: (color) => this._getColorPickerValue(color)
-        });
-
-        partyBindings.forEach(({ party, colorPreview, colorInput, nameInput, votesInput, directMandatesInput, seatsInput, removeButton }) => {
-            colorPreview.addEventListener('click', () => colorInput.click());
-            colorPreview.tabIndex = 0;
-            colorPreview.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    colorInput.click();
-                }
-            });
-
-            colorInput.addEventListener('change', () => {
-                colorPreview.style.background = colorInput.value;
-                this.appState.updateNrwParty(party.id, { color: colorInput.value });
-            });
-
-            nameInput.addEventListener('input', () => {
-                this.appState.updateNrwParty(party.id, { abbreviation: nameInput.value });
-                this._updateColorFromName(nameInput.value, colorPreview, colorInput);
-                this.appState.updateNrwParty(party.id, { color: colorPreview.style.background });
-            });
-
-            votesInput.addEventListener('input', () => {
-                this.appState.updateNrwParty(party.id, { votes: parseInt(votesInput.value, 10) || 0 });
-            });
-
-            directMandatesInput.addEventListener('input', () => {
-                this.appState.updateNrwParty(party.id, { directMandates: parseInt(directMandatesInput.value, 10) || 0 });
-            });
-
-            seatsInput.addEventListener('input', () => {
-                this.appState.updateNrwParty(party.id, { seats: parseInt(seatsInput.value, 10) || 0 });
-            });
-
-            removeButton.addEventListener('click', () => {
-                this.appState.removeNrwParty(party.id);
-                this.renderNrwCouncilElectionPartyList();
-            });
-        });
-
-        this.toggleInputMode(this._getNrwInputMode());
+        this.nrwCouncilFlow.renderPartyList();
     }
 
     /**
      * NEU: Hilfsfunktion, um den aktiven NRW-Eingabemodus (election/direct) auszulesen.
      */
     _getNrwInputMode() {
-        const activeModeTab = this.DOM.nrwInputModeTabs.querySelector('.tab.active');
-        // 'election' als sicherer Fallback, falls kein Tab aktiv sein sollte
-        return activeModeTab ? activeModeTab.dataset.mode : 'election';
+        return this.nrwCouncilFlow.getInputMode();
     }
 
     toggleInputMode(mode) {
-        const isDirectMode = mode === 'direct';
-
-        this.DOM.partyItemHeader.querySelector('[data-header="votes"]').style.display = isDirectMode ? 'none' : 'block';
-        this.DOM.partyItemHeader.querySelector('[data-header="directMandates"]').style.display = isDirectMode ? 'none' : 'block';
-        this.DOM.partyItemHeader.querySelector('[data-header="seats"]').style.display = isDirectMode ? 'block' : 'none';
-
-        this.DOM.partyListElement.querySelectorAll('.party-item').forEach(item => {
-            item.querySelector('[data-role="votes"]').style.display = isDirectMode ? 'none' : 'block';
-            item.querySelector('[data-role="directMandates"]').style.display = isDirectMode ? 'none' : 'block';
-            item.querySelector('[data-role="seats"]').style.display = isDirectMode ? 'block' : 'none';
-        });
-
-        this.DOM.councilSizeGroup.style.display = isDirectMode ? 'none' : 'block';
-        this.DOM.calculateCouncilButton.textContent = isDirectMode ? 'Ratssitze \u00fcbernehmen & weiter' : 'Ratssitze berechnen';
+        this.nrwCouncilFlow.toggleInputMode(mode);
     }
 
     /**
      * NEU: Schaltet die Tabs fÃ¼r den NRW-Eingabemodus (Berechnen vs. Direkt)
      */
     switchNrwInputMode(clickedTab) {
-        if (clickedTab.classList.contains('active')) {
-            return; // Nichts tun, wenn der Tab schon aktiv ist
-        }
-
-        const newMode = clickedTab.dataset.mode;
-
-        // Alten aktiven Tab finden und deaktivieren
-        const oldTab = this.DOM.nrwInputModeTabs.querySelector('.tab.active');
-        if (oldTab) {
-            oldTab.classList.remove('active');
-        }
-
-        // Neuen Tab aktivieren
-        clickedTab.classList.add('active');
-
-        // Die *existierende* Funktion aufrufen, die die UI-Felder umschaltet
-        this.toggleInputMode(newMode);
+        this.nrwCouncilFlow.switchInputMode(clickedTab);
     }
 
     /**
@@ -1021,132 +911,19 @@
     }
 
     calculateCouncilSeats() {
-        // KORREKTUR: Liest den Modus von der neuen Hilfsfunktion
-        const mode = this._getNrwInputMode();
-        if (mode === 'direct') {
-            this.calculateDirectCouncilSeats();
-        } else {
-            this.runCouncilCalculation();
-        }
+        this.nrwCouncilFlow.calculateCouncilSeats();
     }
 
     calculateDirectCouncilSeats() {
-        const partiesData = this._getPartiesFromUI();
-        this.state.councilResults = partiesData.map(p => ({
-            id: p.id,
-            abbreviation: p.abbreviation,
-            color: p.color,
-            votes: p.votes, // Behalten wir, falls der Benutzer zurÃ¼ckschaltet
-            seats: p.seats,
-            directMandatesAwarded: 0, // Nicht zutreffend im Direktmodus
-            listSeatsAwarded: p.seats // Alle sind "ListenplÃ¤tze"
-        }));
-
-        this.renderCouncilResults(this.state.councilResults, partiesData, true);
-        renderProtocolEntries(this.DOM.councilAllocationSteps, [
-            { type: 'paragraph', text: 'Die Ratssitze wurden direkt eingegeben. Es fand keine Berechnung statt.' }
-        ]);
-
-        this.DOM.councilResultsSection.style.display = 'block';
-        this.DOM.votingSimulationSection.style.display = 'block';
-        this.DOM.committeeSection.style.display = 'block';
-
-        this.prepareVotingSimulation();
-        this.prepareCommitteeStep();
-
-        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÃœGEN ---
-        try {
-            // Daten fÃ¼r Charts vorbereiten
-            const totalSeatsForChart = this.state.councilResults.reduce((sum, p) => sum + p.seats, 0);
-
-            // Charts rendern (Stimmen-Balken wird leer sein, da keine Stimmen relevant)
-            this.nrwVoteBarChartRenderer.render(this.state.councilResults, 0); // Keine Gesamtstimmen im Direktmodus
-            this.nrwHemicycleRenderer.render(this.state.councilResults, totalSeatsForChart);
-            if (this.DOM.nrwSeatHemicycleTotal) {
-                this.DOM.nrwSeatHemicycleTotal.textContent = `Gesamtsitzzahl: ${totalSeatsForChart.toLocaleString('de-DE')}`;
-            }
-            this.DOM.nrwChartsContainer.style.display = 'flex'; // Den Container sichtbar machen
-        } catch (e) {
-            console.error("Fehler beim Rendern der NRW-Diagramme (Direktmodus):", e);
-            this.DOM.nrwChartsContainer.style.display = 'none';
-        }
+        this.nrwCouncilFlow.calculateDirectCouncilSeats();
     }
 
     runCouncilCalculation() {
-        const partiesData = this._getPartiesFromUI();
-        const initialTotalSeats = parseInt(this.DOM.councilSize.value) || 0;
-
-        if (partiesData.length === 0 || initialTotalSeats === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte f\u00fcgen Sie Parteien hinzu und legen Sie die Ratsgr\u00f6\u00dfe fest.</p>");
-            return;
-        }
-
-        const totalVotesForProportionality = partiesData.reduce((sum, p) => sum + p.votes, 0);
-
-        const allocator = new NrwKWahlGCalculator(new SainteLagueAllocator());
-        const result = allocator.calculate(partiesData, initialTotalSeats, totalVotesForProportionality, {});
-
-        this.state.councilResults = result.allocatedParties;
-        this.renderCouncilResults(result, partiesData, false);
-        renderProtocolEntries(this.DOM.councilAllocationSteps, result.protocolEntries);
-
-        this.DOM.councilResultsSection.style.display = 'block';
-        this.DOM.votingSimulationSection.style.display = 'block';
-        this.DOM.committeeSection.style.display = 'block';
-
-        this.prepareVotingSimulation();
-        this.prepareCommitteeStep();
-
-        // --- HIER DEN CODE ZUM ZEICHNEN DER NRW-CHARTS EINFÃœGEN ---
-        try {
-            // Daten fÃ¼r Charts vorbereiten
-            const partiesDataForCharts = this._getPartiesFromUI(); // Holt Namen, Farben, Stimmen etc.
-            let totalVotesForChart = 0;
-
-            // FÃ¼ge die Stimmen zu den Ratsergebnissen hinzu
-            const councilResultsWithVotes = this.state.councilResults.map(resultParty => {
-                const inputData = partiesDataForCharts.find(p => p.id === resultParty.id);
-                const votes = inputData ? inputData.votes : 0;
-                totalVotesForChart += votes;
-                return {
-                    ...resultParty, // enthÃ¤lt schon id, abbreviation, seats, color
-                    votes: votes
-                };
-            });
-
-            const totalSeatsForChart = this.state.councilResults.reduce((sum, p) => sum + p.seats, 0);
-
-            // Charts rendern
-            this.nrwVoteBarChartRenderer.render(councilResultsWithVotes, totalVotesForChart);
-            this.nrwHemicycleRenderer.render(councilResultsWithVotes, totalSeatsForChart);
-            if (this.DOM.nrwSeatHemicycleTotal) {
-                this.DOM.nrwSeatHemicycleTotal.textContent = `Gesamtsitzzahl: ${totalSeatsForChart.toLocaleString('de-DE')}`;
-            }
-            this.DOM.nrwChartsContainer.style.display = 'flex'; // Den Container sichtbar machen
-        } catch (e) {
-            console.error("Fehler beim Rendern der NRW-Diagramme:", e);
-            this.DOM.nrwChartsContainer.style.display = 'none';
-        }
-
+        this.nrwCouncilFlow.runCouncilCalculation();
     }
 
     renderCouncilResults(result, partyInputs, isDirectMode = false) {
-        const allocatedParties = result.allocatedParties || result;
-        const totalSeats = allocatedParties.reduce((sum, party) => sum + (party.seats || 0), 0);
-
-        this.currentResultsData = { totalSeats };
-
-        renderCouncilResultsTable({
-            tableBody: this.DOM.councilResultsTableBody,
-            resultsSection: this.DOM.councilResultsSection,
-            detailsContainer: document.getElementById('council-protocol-details'),
-            result,
-            partyInputs,
-            isDirectMode,
-            totalSeatsSummaryElement: this.DOM.councilTotalSeatsSummary,
-            totalSeatsValueElement: this.DOM.councilTotalSeatsValue,
-            totalSeats
-        });
+        this.nrwCouncilFlow.renderCouncilResults(result, partyInputs, isDirectMode);
     }
 
     prepareVotingSimulation() {
