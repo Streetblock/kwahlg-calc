@@ -128,6 +128,7 @@
 
         this.committeeCalculator = new CommitteeCalculator();
         this.nrwCouncilFlow = new NrwCouncilFlow(this);
+        this.committeeFlow = new CommitteeFlow(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -888,26 +889,7 @@
      * NEU: Schaltet die Tabs fÃ¼r den Ausschuss-Berechnungsmodus (Hare vs D'Hondt)
      */
     _switchCommitteeCalcMode(clickedTab) {
-        if (clickedTab.classList.contains('active')) {
-            return; // Nichts tun, wenn der Tab schon aktiv ist
-        }
-
-        // Alten aktiven Tab finden und deaktivieren
-        const oldTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
-        if (oldTab) {
-            oldTab.classList.remove('active');
-        }
-
-        // Neuen Tab aktivieren
-        clickedTab.classList.add('active');
-
-        // Optional: Button-Text Ã¤ndern
-        const newMode = clickedTab.dataset.mode;
-        if (newMode === 'dhondt') {
-            this.DOM.calculateCommitteesButton.textContent = "Zugriffsreihenfolge berechnen";
-        } else {
-            this.DOM.calculateCommitteesButton.textContent = "Ausschusssitze berechnen";
-        }
+        this.committeeFlow.switchCalculationMode(clickedTab);
     }
 
     calculateCouncilSeats() {
@@ -927,189 +909,47 @@
     }
 
     prepareVotingSimulation() {
-        const existingPresentVotes = this.appState.getCommitteePresentVotes();
-        const defaultPresentVotes = this.state.councilResults
-            .filter((party) => party.seats > 0)
-            .map((party) => {
-                const existingVote = existingPresentVotes.find((entry) => entry.partyId === party.id);
-                return {
-                    partyId: party.id,
-                    present: existingVote ? existingVote.present : party.seats
-                };
-            });
-        this.appState.setCommitteePresentVotes(defaultPresentVotes);
-        this.renderCommitteeVotingInputs();
-        this.updateTotalPresentVotes();
+        this.committeeFlow.prepareVotingSimulation();
     }
 
     renderCommitteeVotingInputs() {
-        const votingInputs = renderCommitteeVotingInputs(
-            this.DOM.votingStrengthContainer,
-            this.state.councilResults,
-            this.appState.getCommitteePresentVotes()
-        );
-
-        votingInputs.forEach(({ party, input }) => {
-            input.addEventListener('input', () => {
-                this.appState.updateCommitteePresentVote(party.id, parseInt(input.value, 10) || 0);
-                this.updateTotalPresentVotes();
-            });
-        });
+        this.committeeFlow.renderVotingInputs();
     }
 
     updateTotalPresentVotes() {
-        const totalVotes = this.appState.getCommitteePresentVotes()
-            .reduce((sum, entry) => sum + (parseInt(entry.present, 10) || 0), 0);
-        this.DOM.totalPresentVotes.textContent = totalVotes;
+        this.committeeFlow.updateTotalPresentVotes();
     }
 
     addCommitteeSizeInput() {
-        this.appState.addCommitteeSeatSize('');
-        this.renderCommitteeSizeInputs();
+        this.committeeFlow.addCommitteeSizeInput();
     }
 
     renderCommitteeSizeInputs() {
-        const sizeInputs = renderCommitteeSizeInputList(
-            this.DOM.committeeSizesContainer,
-            this.appState.getCommitteeSeatSizes()
-        );
-
-        sizeInputs.forEach(({ index, input, removeButton }) => {
-            input.addEventListener('input', () => {
-                this.appState.updateCommitteeSeatSize(index, input.value);
-            });
-
-            if (removeButton) {
-                removeButton.addEventListener('click', () => {
-                    this.appState.removeCommitteeSeatSize(index);
-                    this.renderCommitteeSizeInputs();
-                });
-            }
-        });
+        this.committeeFlow.renderCommitteeSizeInputs();
     }
 
     prepareCommitteeStep() {
-        this.appState.clearCommitteeFactionAlliances();
-        this.renderFraktionenForGemeinschaft();
+        this.committeeFlow.prepareCommitteeStep();
     }
 
     createFraktionsgemeinschaft() {
-        const selectedCheckboxes = this.DOM.factionAllianceListElement.querySelectorAll('input[type="checkbox"]:checked');
-        if (selectedCheckboxes.length < 2) {
-            this._showModal("Hinweis", "<p>Bitte mindestens zwei Fraktionen/Mitglieder fÃ¼r eine Fraktionsgemeinschaft auswÃ¤hlen.</p>");
-            return;
-        }
-        const memberIds = Array.from(selectedCheckboxes).map(chk => chk.closest('.fraktion-item').dataset.fraktionId);
-        const memberFraktionen = this.state.councilResults.filter(f => memberIds.includes(f.id));
-        const totalSitze = memberFraktionen.reduce((sum, f) => sum + f.seats, 0);
-        const name = memberFraktionen.map(f => f.abbreviation).join(' + ');
-
-        // --- NEU: Farben sammeln und Gradient erzeugen ---
-        const memberColors = memberFraktionen.map(f => f.color);
-        const gradientColor = this._createGradient(memberColors);
-        // --- ENDE NEU ---
-
-        const factionAlliance = {
-            name,
-            totalSitze,
-            memberIds,
-            color: gradientColor // Farbe im State speichern
-        };
-        this.appState.addCommitteeFactionAlliance(factionAlliance);
-        this.renderFraktionenForGemeinschaft();
+        this.committeeFlow.createFactionAlliance();
     }
 
     dissolveFraktionsgemeinschaften() {
-        this.appState.clearCommitteeFactionAlliances();
-        this.renderFraktionenForGemeinschaft();
+        this.committeeFlow.dissolveFactionAlliances();
     }
 
     renderFraktionenForGemeinschaft() {
-        renderCommitteeFactionAllianceList(
-            this.DOM.factionAllianceListElement,
-            this.state.councilResults,
-            this.appState.getCommitteeFactionAlliances()
-        );
+        this.committeeFlow.renderFactionAllianceList();
     }
 
     calculateCommitteeSeats() {
-        const committeeSizes = this.appState.getCommitteeSeatSizes()
-            .map(value => parseInt(value, 10))
-            .filter(val => !isNaN(val) && val > 0);
-
-        if (committeeSizes.length === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte geben Sie mindestens eine g\u00fcltige Ausschussgr\u00f6\u00dfe an.</p>");
-            return;
-        }
-
-        // --- Basisdaten sammeln (bleibt gleich) ---
-        const manualVotes = {};
-        this.appState.getCommitteePresentVotes().forEach((entry) => { manualVotes[entry.partyId] = parseInt(entry.present, 10) || 0; });
-
-        // PrÃ¼fen, welcher Modus (Tab) aktiv ist
-        const activeCommitteeTab = this.DOM.committeeCalcModeTabs.querySelector('.tab.active');
-        const mode = activeCommitteeTab ? activeCommitteeTab.dataset.mode : 'hare';
-        const committeeCalculation = this.committeeCalculator.calculate({
-            committeeSizes,
-            councilResults: this.state.councilResults,
-            factionAlliances: this.appState.getCommitteeFactionAlliances(),
-            manualVotes,
-            mode
-        });
-        let finalNoteHTML = ''; // FÃ¼r die Einzelmitglieder-Warnung
-
-        this.DOM.committeeResultsSection.querySelector('h3').textContent = committeeCalculation.title;
-
-        if (committeeCalculation.displayMode === 'protocol') {
-            // --- NEUER D'HONDT-PFAD (PROTOKOLL-ANZEIGE) ---
-            // UI umschalten: Protokoll AN, Tabelle AUS
-            this.DOM.committeeTableWrapper.style.display = 'none';
-            this.DOM.committeeProtocolContainer.style.display = 'block';
-            renderCommitteeProtocol(this.DOM.committeeProtocolContainer, committeeCalculation.protocolEntries);
-
-            // Die Warnung fÃ¼r fraktionslose Mitglieder muss hier separat hinzugefÃ¼gt werden
-            if (committeeCalculation.individualMembers.length > 0) {
-                 const memberNames = committeeCalculation.individualMembers.map(m => `<strong>${m.abbreviation}</strong>`).join(', ');
-                 finalNoteHTML += `<p><strong>Hinweis zu fraktionslosen Mitgliedern:</strong></p><p>Die Ratsmitglieder von ${memberNames} nehmen nicht an der Verteilung der stimmberechtigter Ausschusssitze teil. Gem\u00e4\u00df \u00a7 58 Abs. 1 GO NRW hat jedes dieser Mitglieder das Recht, mindestens einem Ausschuss als <strong>beratendes Mitglied</strong> (ohne Stimmrecht) anzugehÃ¶ren.</p>`;
-            }
-
-        } else {
-            // --- ALTER HARE-NIEMEYER-PFAD (TABELLEN-ANZEIGE) ---
-            // UI umschalten: Tabelle AN, Protokoll AUS
-            this.DOM.committeeTableWrapper.style.display = 'block';
-            this.DOM.committeeProtocolContainer.style.display = 'none';
-
-            // Rufe die Standard-Tabellen-Render-Funktion auf
-            // Diese Funktion erstellt die 'finalNoteHTML' selbst (inkl. Los-Warnungen fÃ¼r Hare)
-            // (Wir mÃ¼ssen 'einzelmitglieder' Ã¼bergeben, damit 'renderCommitteeResults' es hat)
-            finalNoteHTML = this.renderCommitteeResults(
-                committeeCalculation.results,
-                committeeCalculation.calculationBasis,
-                committeeSizes,
-                committeeCalculation.individualMembers
-            );
-        }
-
-        // --- Notiz-Box (fÃ¼r beide Modi) aktualisieren ---
-        if(finalNoteHTML) {
-            this.DOM.individualMembersNote.innerHTML = finalNoteHTML;
-            this.DOM.individualMembersNote.style.display = 'block';
-        } else {
-            this.DOM.individualMembersNote.style.display = 'none';
-        }
-
-        // In beiden FÃ¤llen: Ergebnisse anzeigen
-        this.DOM.committeeResultsSection.style.display = 'block';
+        this.committeeFlow.calculateCommitteeSeats();
     }
 
     renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder) {
-        return renderCommitteeResultsTable({
-            table: this.DOM.committeeResultsTable,
-            results,
-            calculationBasis,
-            committeeSizes,
-            individualMembers: einzelmitglieder
-        });
+        return this.committeeFlow.renderCommitteeResults(results, calculationBasis, committeeSizes, einzelmitglieder);
     }
 
     exportScenario() {
