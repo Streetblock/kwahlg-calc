@@ -130,6 +130,7 @@
         this.nrwCouncilFlow = new NrwCouncilFlow(this);
         this.committeeFlow = new CommitteeFlow(this);
         this.simpleFlow = new SimpleFlow(this);
+        this.appPersistence = new AppPersistence(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -994,41 +995,7 @@
      */
 
     _saveStateToStorage() {
-        // Nicht speichern, wenn ein Reset ausgelÃ¶st wurde
-        if (this.isResetting) {
-              return;
-        }
-
-        // Das State-Objekt, das alles enthÃ¤lt, was wir speichern wollen
-        const state = {
-            // KORREKTUR 1: Den Query auf den Haupt-Tab-Container beschrÃ¤nkt
-            appMode: this.DOM.appModeSelection.querySelector('.tab.active').dataset.mode,
-            nrwState: {
-                // KORREKTUR 2: Die Hilfsfunktion verwenden
-                inputMode: this._getNrwInputMode(),
-                councilSize: this.DOM.councilSize.value,
-                parties: this._getPartiesFromUI() // Diese Methode gibt bereits saubere Daten zurÃ¼ck
-            },
-            simpleState: {
-                procedure: this.appState.getSimpleProcedure(),
-                seatSizes: this.appState.getSimpleSeatSizes().filter(val => val.trim() !== ''),
-                proposals: this._getProposalsFromUI() // Gibt saubere Daten zurÃ¼ck
-            },
-            committeeState: {
-                seatSizes: this.appState.getCommitteeSeatSizes().filter(val => val.trim() !== ''),
-                presentVotes: this.appState.getCommitteePresentVotes(),
-                factionAlliances: this.appState.getCommitteeFactionAlliances()
-            },
-            customColorMappings: this.state.customColorMappings // NEU
-        };
-
-        try {
-            // Speichern des gesamten Zustands als JSON-String
-            localStorage.setItem(this.storageKey, JSON.stringify(state));
-            console.log("Anwendungs-Status gespeichert.");
-        } catch (e) {
-            console.error("Fehler beim Speichern des Anwendungs-Status:", e);
-        }
+        this.appPersistence.saveState();
     }
 
     /**
@@ -1036,114 +1003,7 @@
      * Wird beim Initialisieren des Controllers aufgerufen.
      */
     _loadStateFromStorage() {
-        const savedState = localStorage.getItem(this.storageKey);
-        if (!savedState) {
-            console.log("Kein gespeicherter Status gefunden.");
-            return;
-        }
-
-        let state;
-        try {
-            state = JSON.parse(savedState);
-        } catch (e) {
-            console.error("Gespeicherter Status konnte nicht geladen werden:", e);
-            localStorage.removeItem(this.storageKey); // BeschÃ¤digten Status entfernen
-            return;
-        }
-
-        if (!state) return;
-
-        // --- 1. NRW-Status wiederherstellen ---
-        if (state.nrwState) {
-            this.clearAllParties(true); // UI und State leeren
-            if (state.nrwState.parties && Array.isArray(state.nrwState.parties)) {
-                // Gespeicherte Parteien mit ihren IDs (!) wieder hinzufÃ¼gen
-                state.nrwState.parties.forEach(p => {
-                    this.addParty(p.abbreviation, p.votes, p.directMandates, p.color, p.seats, p.id);
-                });
-            }
-            this.DOM.councilSize.value = state.nrwState.councilSize || '66';
-
-            // Radio-Button fÃ¼r den Eingabemodus setzen
-            /*const nrwMode = state.nrwState.inputMode || 'election';
-            const radioEl = document.getElementById(`mode-${nrwMode}`);
-            if (radioEl) {
-                radioEl.checked = true;
-            }
-            this.toggleInputMode(nrwMode); // UI fÃ¼r den Modus anpassen
-            //*/
-
-            // Tab fÃ¼r den Eingabemodus setzen
-            const nrwMode = state.nrwState.inputMode || 'election';
-            const tabEl = this.DOM.nrwInputModeTabs.querySelector(`.tab[data-mode="${nrwMode}"]`);
-
-            // Sicherstellen, dass die Standard-UI (election) aktiv ist, bevor wir umschalten
-            this.DOM.nrwInputModeTabs.querySelector('.tab[data-mode="election"]').classList.add('active');
-            this.DOM.nrwInputModeTabs.querySelector('.tab[data-mode="direct"]').classList.remove('active');
-
-            if (tabEl) {
-                // Unsere neue Funktion kÃ¼mmert sich um das Highlighting UND das Umschalten der UI
-                this.switchNrwInputMode(tabEl);
-            } else {
-                // Fallback, falls der Tab nicht gefunden wird
-                this.toggleInputMode(nrwMode);
-            }
-
-        }
-
-        // --- 2. "Einfach"-Status wiederherstellen ---
-        if (state.simpleState) {
-            this.clearAllProposals(true); // UI und State leeren
-            if (state.simpleState.proposals && Array.isArray(state.simpleState.proposals)) {
-                // Gespeicherte VorschlÃ¤ge mit ihren IDs (!) wieder hinzufÃ¼gen
-                state.simpleState.proposals.forEach(p => {
-                    this.addProposal(p.abbreviation, p.votes, p.color, p.id);
-                });
-            }
-            this.appState.setSimpleProcedure(state.simpleState.procedure || 'hare');
-            this.appState.setSimpleSeatSizes(state.simpleState.seatSizes);
-            this.renderSimpleSizeInputs();
-        }
-
-        const committeeState = state.committeeState || {
-            seatSizes: ['19'],
-            presentVotes: state.nrwState?.presentVotes || [],
-            factionAlliances: []
-        };
-
-        if (committeeState) {
-            this.appState.setCommitteeSeatSizes(committeeState.seatSizes);
-            this.appState.setCommitteePresentVotes(committeeState.presentVotes);
-            this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
-            this.renderCommitteeSizeInputs();
-        }
-
-        // --- 3. App-Modus (Tab) wiederherstellen ---
-        const appMode = state.appMode || 'simple';
-        this.switchAppMode(appMode);
-
-        // --- 4. Ausschussdaten wiederherstellen ---
-        // Ausschussdaten bleiben fachlich getrennt gespeichert, brauchen aber vorhandene Ratssitze als Grundlage.
-        if (state.nrwState && state.nrwState.parties && state.nrwState.parties.length > 0) {
-            this.calculateCouncilSeats();
-
-            this.appState.setCommitteePresentVotes(committeeState.presentVotes);
-            this.appState.setCommitteeFactionAlliances(committeeState.factionAlliances);
-            this.renderCommitteeVotingInputs();
-            this.renderFraktionenForGemeinschaft();
-            this.updateTotalPresentVotes();
-        }
-
-        // --- 5. Custom Color Mappings wiederherstellen ---
-        if (state.customColorMappings && Array.isArray(state.customColorMappings)) {
-            this.state.customColorMappings = state.customColorMappings;
-        }
-
-        // --- 6. NEU: Preset-Dropdown auf "Gespeichert" setzen ---
-        this.DOM.presetSelect.value = 'user_saved_state';
-        this.state.currentPresetId = 'user_saved_state';
-
-        console.log("Anwendungs-Status wiederhergestellt.");
+        this.appPersistence.loadState();
     }
 
     // ==========================================================
