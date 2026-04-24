@@ -129,6 +129,7 @@
         this.committeeCalculator = new CommitteeCalculator();
         this.nrwCouncilFlow = new NrwCouncilFlow(this);
         this.committeeFlow = new CommitteeFlow(this);
+        this.simpleFlow = new SimpleFlow(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -609,211 +610,48 @@
     // ==========================================================
 
     addInitialProposals() {
-        this.addProposal('Liste A', 45, '#005ea8');
-        this.addProposal('Liste B', 32, '#EB001F');
-        this.addProposal('Liste C', 18, '#64A12D');
+        this.simpleFlow.addInitialProposals();
     }
 
     addProposal(name = '', votes = 0, color = '', id = null) {
-        const proposalId = id || `proposal-${this.proposalIdCounter++}`;
-
-        // NEU: Sicherstellen, dass der Counter bei geladenen IDs nicht kollidiert
-        if (id) {
-            const numericId = parseInt(id.split('-')[1]);
-            if (!isNaN(numericId) && numericId >= this.proposalIdCounter) {
-                this.proposalIdCounter = numericId + 1;
-            }
-        }
-
-        const proposalColor = color || this.defaultColors[this.proposalIdCounter % this.defaultColors.length];
-        this.appState.addSimpleProposal({
-            id: proposalId,
-            color: proposalColor,
-            abbreviation: name,
-            votes
-        });
-        this.renderSimpleProposalList();
+        this.simpleFlow.addProposal(name, votes, color, id);
     }
 
     // GEÃ„NDERT: Muss 'async' sein, um auf das Modal zu warten
     async clearAllProposals(skipConfirm = false) {
-        if (!skipConfirm) {
-            // Ruft das neue Modal auf und wartet auf die Antwort (true/false)
-            const confirmed = await this._showConfirmationModal(
-                'Best\u00e4tigung erforderlich',
-                'M\u00f6chten Sie wirklich <strong>alle Vorschl\u00e4ge</strong> l\u00f6schen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.',
-                'Alle l\u00f6schen',
-                'btn-danger'
-            );
-            if (!confirmed) return; // Wenn "false" (Abbrechen), Funktion beenden
-        }
-        this.appState.clearSimpleProposals();
-        this.renderSimpleProposalList();
+        await this.simpleFlow.clearAllProposals(skipConfirm);
     }
 
     // NEU: Setzt alle Stimmen im "Einfach"-Modus auf 0
     resetAllProposalVotes() {
-        this.appState.resetSimpleProposalVotes();
-        this.renderSimpleProposalList();
+        this.simpleFlow.resetAllProposalVotes();
     }
 
     // NEU: FÃ¼gt ein weiteres Eingabefeld fÃ¼r die SitzgrÃ¶ÃŸe hinzu
     addSimpleSizeInput() {
-        this.appState.addSimpleSeatSize('');
-        this.renderSimpleSizeInputs();
+        this.simpleFlow.addSimpleSizeInput();
     }
 
     _getProposalsFromUI() {
-        return this.appState.getSimpleProposals();
+        return this.simpleFlow.getProposals();
     }
 
     renderSimpleProposalList() {
-        const proposals = this.appState.getSimpleProposals();
-        const proposalInputs = renderSimpleProposalList(this.DOM.simpleProposalsContainer, proposals, {
-            getColorPickerValue: (color) => this._getColorPickerValue(color)
-        });
-
-        proposalInputs.forEach(({ proposal, colorPreview, colorInput, nameInput, votesInput, removeButton }) => {
-            colorPreview.addEventListener('click', () => colorInput.click());
-            colorPreview.tabIndex = 0;
-            colorPreview.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    colorInput.click();
-                }
-            });
-
-            colorInput.addEventListener('change', () => {
-                colorPreview.style.background = colorInput.value;
-                this.appState.updateSimpleProposal(proposal.id, { color: colorInput.value });
-            });
-
-            nameInput.addEventListener('input', () => {
-                this.appState.updateSimpleProposal(proposal.id, { abbreviation: nameInput.value || 'Unbenannt' });
-                this._updateColorFromName(nameInput.value, colorPreview, colorInput);
-                this.appState.updateSimpleProposal(proposal.id, { color: colorPreview.style.background });
-            });
-
-            votesInput.addEventListener('input', () => {
-                this.appState.updateSimpleProposal(proposal.id, { votes: parseInt(votesInput.value, 10) || 0 });
-            });
-
-            removeButton.addEventListener('click', () => {
-                this.appState.removeSimpleProposal(proposal.id);
-                this.renderSimpleProposalList();
-            });
-        });
+        this.simpleFlow.renderProposalList();
     }
 
     renderSimpleSizeInputs() {
-        const seatSizes = this.appState.getSimpleSeatSizes();
-        const sizeInputs = renderSimpleSizeInputList(
-            this.DOM.simpleSizesContainer,
-            seatSizes,
-            this.appState.getSimpleProcedure(),
-            { procedureSelect: this.DOM.simpleProcedure }
-        );
-
-        sizeInputs.forEach(({ index, input, removeButton }) => {
-            input.addEventListener('input', () => {
-                this.appState.updateSimpleSeatSize(index, input.value);
-            });
-
-            if (removeButton) {
-                removeButton.addEventListener('click', () => {
-                    this.appState.removeSimpleSeatSize(index);
-                    this.renderSimpleSizeInputs();
-                });
-            }
-        });
+        this.simpleFlow.renderSizeInputs();
     }
 
     // ÃœBERARBEITET: FÃ¼hrt Berechnung fÃ¼r mehrere SitzgrÃ¶ÃŸen durch
     runSimpleCalculation() {
-        // Liest alle SitzgrÃ¶ÃŸen aus
-        const simpleSizes = this.appState.getSimpleSeatSizes()
-            .map(value => parseInt(value, 10))
-            .filter(val => !isNaN(val) && val > 0);
-
-        const procedure = this.appState.getSimpleProcedure();
-        const proposalsData = this._getProposalsFromUI();
-        const totalVotes = proposalsData.reduce((sum, p) => sum + p.votes, 0);
-
-        if (proposalsData.length === 0 || simpleSizes.length === 0 || totalVotes === 0) {
-            this._showModal("Eingabefehler", "<p>Bitte VorschlÃ¤ge mit Stimmen und mindestens eine Sitzanzahl > 0 eingeben.</p>");
-            return;
-        }
-
-        let allocator;
-        switch (procedure) {
-            case 'hare':
-                allocator = new HareNiemeyerAllocator();
-                break;
-            case 'sainte':
-                allocator = new SainteLagueAllocator();
-                break;
-            case 'dhondt':
-                allocator = new DHondtAllocator();
-                break;
-            default:
-                return;
-        }
-
-        const results = {};
-        const protocolEntries = [];
-
-        // FÃ¼hrt Berechnung fÃ¼r jede GrÃ¶ÃŸe durch
-        simpleSizes.forEach(size => {
-            const result = allocator.calculate(proposalsData, size, totalVotes);
-            results[size] = result;
-            protocolEntries.push(...(result.protocolEntries || []));
-            protocolEntries.push({ type: 'separator' });
-        });
-
-        renderProtocolEntries(this.DOM.simpleAllocationSteps, protocolEntries);
-        this.renderSimpleResults(results, proposalsData, totalVotes, simpleSizes);
-
-        try {
-            if (simpleSizes.length > 0) {
-                const firstSize = simpleSizes[0]; // Nimm die erste SitzgrÃ¶ÃŸe fÃ¼r die Charts
-                const resultsForFirstSize = results[firstSize];
-
-                // FÃ¼ge die Sitze zu den Eingabedaten hinzu
-                const simpleDataForCharts = proposalsData.map(proposal => {
-                    const partyResult = resultsForFirstSize.partyResults.find(p => p.id === proposal.id);
-                    return {
-                        ...proposal, // enthÃ¤lt id, abbreviation, votes, color
-                        seats: partyResult ? partyResult.proportionalSeats : 0
-                    };
-                });
-
-                const totalSeatsForChart = simpleDataForCharts.reduce((sum, p) => sum + p.seats, 0);
-
-                // Charts rendern
-                this.simpleVoteBarChartRenderer.render(simpleDataForCharts, totalVotes);
-                this.simpleHemicycleRenderer.render(simpleDataForCharts, totalSeatsForChart);
-                this.DOM.simpleChartsContainer.style.display = 'flex'; // Container sichtbar machen
-            } else {
-                this.DOM.simpleChartsContainer.style.display = 'none';
-            }
-        } catch (e) {
-            console.error("Fehler beim Rendern der Simple-Diagramme:", e);
-            this.DOM.simpleChartsContainer.style.display = 'none';
-        }
-
+        this.simpleFlow.runCalculation();
     }
 
     // ÃœBERARBEITET: Zeigt Ergebnisse fÃ¼r mehrere SitzgrÃ¶ÃŸen in Spalten an
     renderSimpleResults(results, proposalsData, totalVotes, simpleSizes) {
-        renderSimpleResultsTable({
-            table: this.DOM.simpleResultsTable,
-            tieNoteContainer: this.DOM.simpleTieNoteContainer,
-            results,
-            proposalsData,
-            totalVotes,
-            simpleSizes
-        });
-        this.DOM.simpleResultsSection.style.display = 'block';
+        this.simpleFlow.renderResults(results, proposalsData, totalVotes, simpleSizes);
     }
 
     // ==========================================================
