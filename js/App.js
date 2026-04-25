@@ -132,6 +132,7 @@
         this.simpleFlow = new SimpleFlow(this);
         this.appPersistence = new AppPersistence(this);
         this.scenarioFlow = new ScenarioFlow(this);
+        this.modalController = new ModalController(this.DOM);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -325,136 +326,19 @@
 
     // NEU: Zeigt das Modal mit Inhalt an
     _showModal(title, htmlContent) {
-        this.DOM.csvModalTitle.innerText = title;
-        this.DOM.csvModalBody.innerHTML = htmlContent;
-        if (this.DOM.csvImportModal) {
-            this.DOM.csvImportModal.style.display = 'flex';
-        }
+        this.modalController.show(title, htmlContent);
     }
 
     // NEU: Versteckt das Modal
     _hideModal() {
-        if (this.DOM.csvImportModal) {
-            this.DOM.csvImportModal.style.display = 'none';
-        }
+        this.modalController.hide();
     }
 
     // NEU: Zeigt ein Modal mit "BestÃ¤tigen" und "Abbrechen" an
     // Gibt ein Promise zurÃ¼ck, das mit true (bestÃ¤tigt) oder false (abgebrochen) auflÃ¶st
     _showConfirmationModal(title, message, confirmButtonText = 'OK', confirmButtonClass = 'btn-danger') {
-        return new Promise((resolve) => {
-            // HTML fÃ¼r den Modal-Body mit den Buttons
-            const modalBodyHTML = `
-                <p>${message}</p>
-                <div class="modal-actions" style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                    <button id="modal-btn-cancel" class="btn-secondary">Abbrechen</button>
-                    <button id="modal-btn-confirm" class="${confirmButtonClass}">${confirmButtonText}</button>
-                </div>
-            `;
-
-            // Modal mit dem neuen Inhalt anzeigen
-            this._showModal(title, modalBodyHTML);
-
-            // Referenzen zu den Elementen im Modal holen
-            const btnConfirm = document.getElementById('modal-btn-confirm');
-            const btnCancel = document.getElementById('modal-btn-cancel');
-            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-SchlieÃŸ-Button oben rechts
-
-            // --- AKTUALISIERT: Handler fÃ¼r Tastatur-Events ---
-            const keydownHandler = (e) => {
-                // PrÃ¼fen, ob die Enter-Taste gedrÃ¼ckt wurde
-                if (e.key === 'Enter') {
-                    e.preventDefault(); // Verhindert Standard-Aktionen
-                    confirmHandler(); // LÃ¶st die BestÃ¤tigungs-Aktion aus
-                }
-                // NEU: PrÃ¼fen, ob die Escape-Taste gedrÃ¼ckt wurde
-                else if (e.key === 'Escape' || e.key === 'Esc') { // 'Esc' fÃ¼r Ã¤ltere Browser
-                    e.preventDefault();
-                    cancelHandler(); // LÃ¶st die Abbrechen-Aktion aus
-                }
-            };
-            // --- ENDE AKTUALISIERT ---
-
-            // AufrÃ¤umfunktion, um Event-Listener zu entfernen und das Modal zu schlieÃŸen
-            const cleanupAndResolve = (result) => {
-                btnConfirm.removeEventListener('click', confirmHandler);
-                btnCancel.removeEventListener('click', cancelHandler);
-                btnCloseX.removeEventListener('click', cancelHandler);
-                document.removeEventListener('keydown', keydownHandler); // Entfernt Tastatur-Listener
-
-                this._hideModal();
-                resolve(result);
-            };
-
-            // Handler fÃ¼r "BestÃ¤tigen"
-            const confirmHandler = () => {
-                cleanupAndResolve(true); // Promise mit "true" auflÃ¶sen
-            };
-
-            // Handler fÃ¼r "Abbrechen" (gilt fÃ¼r "Abbrechen"-Button UND 'X'-Button)
-            const cancelHandler = () => {
-                cleanupAndResolve(false); // Promise mit "false" auflÃ¶sen
-            };
-
-            // TemporÃ¤re Event-Listener an die Buttons hÃ¤ngen
-            btnConfirm.addEventListener('click', confirmHandler);
-            btnCancel.addEventListener('click', cancelHandler);
-            btnCloseX.addEventListener('click', cancelHandler);
-
-            // Tastatur-Listener zum Dokument hinzufÃ¼gen
-            document.addEventListener('keydown', keydownHandler);
-        });
+        return this.modalController.confirm(title, message, confirmButtonText, confirmButtonClass);
     }
-
-    /*_showConfirmationModal(title, message, confirmButtonText = 'OK', confirmButtonClass = 'btn-danger') {
-        return new Promise((resolve) => {
-            // HTML fÃ¼r den Modal-Body mit den Buttons
-            const modalBodyHTML = `
-                <p>${message}</p>
-                <div class="modal-actions" style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                    <!-- Verwendet die neue .btn-secondary Klasse -->
-                    <button id="modal-btn-cancel" class="btn-secondary">Abbrechen</button>
-                    <button id="modal-btn-confirm" class="${confirmButtonClass}">${confirmButtonText}</button>
-                </div>
-            `;
-
-            // Modal mit dem neuen Inhalt anzeigen
-            this._showModal(title, modalBodyHTML);
-
-            // Referenzen zu den Elementen im Modal holen
-            const btnConfirm = document.getElementById('modal-btn-confirm');
-            const btnCancel = document.getElementById('modal-btn-cancel');
-            const btnCloseX = this.DOM.csvModalClose; // Der 'X'-SchlieÃŸ-Button oben rechts
-
-            // AufrÃ¤umfunktion, um Event-Listener zu entfernen und das Modal zu schlieÃŸen
-            // WICHTIG: Eigene Listener, um Konflikte mit dem Standard-Listener zu vermeiden
-            const cleanupAndResolve = (result) => {
-                btnConfirm.removeEventListener('click', confirmHandler);
-                btnCancel.removeEventListener('click', cancelHandler);
-                // Wichtig: Wir mÃ¼ssen den *temporÃ¤ren* 'X'-Listener entfernen
-                btnCloseX.removeEventListener('click', cancelHandler);
-                this._hideModal();
-                resolve(result);
-            };
-
-            // Handler fÃ¼r "BestÃ¤tigen"
-            const confirmHandler = () => {
-                cleanupAndResolve(true); // Promise mit "true" auflÃ¶sen
-            };
-
-            // Handler fÃ¼r "Abbrechen" (gilt fÃ¼r "Abbrechen"-Button UND 'X'-Button)
-            const cancelHandler = () => {
-                cleanupAndResolve(false); // Promise mit "false" auflÃ¶sen
-            };
-
-            // TemporÃ¤re Event-Listener an die Buttons hÃ¤ngen
-            btnConfirm.addEventListener('click', confirmHandler);
-            btnCancel.addEventListener('click', cancelHandler);
-            // Wir fÃ¼gen einen *eigenen* Listener zum 'X' hinzu, der "Abbrechen" auslÃ¶st
-            // Dieser Ã¼berschreibt nicht den Standard-Listener, wird aber zuerst ausgefÃ¼hrt
-            btnCloseX.addEventListener('click', cancelHandler);
-        });
-    }//*/
 
     // ==========================================================
     // NEUE / ÃœBERARBEITETE METHODEN
