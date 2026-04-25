@@ -24,7 +24,12 @@ const {
 
 ### Browser
 
-Load the calculator scripts and library entrypoint in order:
+The calculator app itself is the primary browser example for this library. The page in
+`index.html` loads the calculation core in classic script mode and uses the same
+browser-compatible math files that back this package.
+
+If you want to consume the packaged browser API directly, load the calculator scripts and
+library entrypoint in order:
 
 ```html
 <script src="./js/math/Allocators.js"></script>
@@ -33,7 +38,7 @@ Load the calculator scripts and library entrypoint in order:
 <script src="./lib/kwahlg-calc/index.js"></script>
 ```
 
-After that, the public API is available as:
+After that, the public API is available globally as:
 
 ```js
 const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
@@ -160,5 +165,6 @@ Returns:
 ## Notes
 
 - The library currently supports CommonJS in Node.
+- The Sitzrechner app itself serves as the reference browser integration.
 - In browser usage, the API is exposed globally as `KWahlGCalcLib`.
 - Protocol output is structured data intended for renderer consumption, not HTML strings.
