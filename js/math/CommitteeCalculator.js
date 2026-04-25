@@ -16,6 +16,14 @@ class CommitteeCalculator {
         this.dhondtAllocator = options.dhondtAllocator || new CommitteeDHondtAllocator();
     }
 
+    /**
+     * Builds the normalized calculation basis for committee allocation.
+     *
+     * Returns:
+     * - `calculationBasis`: factions / alliances participating in allocation
+     * - `individualMembers`: council members below the 2-vote threshold
+     * - `totalVotes`: sum of votes across the calculation basis
+     */
     buildCalculationContext(councilResults, factionAlliances, manualVotes) {
         const assignedFactionIds = new Set((factionAlliances || []).flatMap((alliance) => alliance.memberIds));
         const unassignedMembers = (councilResults || []).filter((member) => member.seats > 0 && !assignedFactionIds.has(member.id));
@@ -63,6 +71,15 @@ class CommitteeCalculator {
         };
     }
 
+    /**
+     * Calculates committee allocation or access order.
+     *
+     * Returns:
+     * - `calculationBasis`, `individualMembers`, `totalVotes`
+     * - `mode`, `displayMode`, `title`
+     * - `results`: keyed by committee size
+     * - `protocolEntries`: structured protocol data for renderer consumption
+     */
     calculate(options) {
         const {
             committeeSizes,

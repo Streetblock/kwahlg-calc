@@ -6,6 +6,15 @@ class NrwKWahlGCalculator {
         }
     }
 
+    /**
+     * Calculates council seat allocation under § 33 KWahlG NRW.
+     *
+     * Returns:
+     * - `allocatedParties`: normalized party result records
+     * - `protocolEntries`: structured calculation protocol
+     * - `lotteryInfos`: lottery metadata from the base allocator
+     * - `tieInfo`: unresolved tie information, if present
+     */
     calculate(partiesData, initialTotalSeatsInConstituency, totalListVotesRelevantForBase, additionalData = {}) {
         const protocolEntries = [
             { type: 'heading', level: 4, text: 'Protokoll der Sitzverteilung nach §33 KWahlG NRW' }

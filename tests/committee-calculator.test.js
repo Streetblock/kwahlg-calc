@@ -134,5 +134,34 @@ module.exports = [
                 [['cdu', 3], ['spd', 2]]
             );
         }
+    },
+    {
+        name: 'CommitteeCalculator returns the documented result contract shape',
+        run() {
+            const calculator = new CommitteeCalculator();
+            const councilResults = [
+                { id: 'cdu', abbreviation: 'CDU', seats: 20, color: '#000000' },
+                { id: 'spd', abbreviation: 'SPD', seats: 15, color: '#eb001f' }
+            ];
+            const manualVotes = { cdu: 20, spd: 15 };
+
+            const result = calculator.calculate({
+                committeeSizes: [5],
+                councilResults,
+                factionAlliances: [],
+                manualVotes,
+                mode: 'hare'
+            });
+
+            assert.ok(Array.isArray(result.calculationBasis));
+            assert.ok(Array.isArray(result.individualMembers));
+            assert.equal(typeof result.totalVotes, 'number');
+            assert.equal(typeof result.mode, 'string');
+            assert.equal(typeof result.displayMode, 'string');
+            assert.equal(typeof result.title, 'string');
+            assert.equal(typeof result.results, 'object');
+            assert.ok(Array.isArray(result.results[5].partyResults));
+            assert.ok(Array.isArray(result.protocolEntries));
+        }
     }
 ];

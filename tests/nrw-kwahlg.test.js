@@ -82,5 +82,25 @@ module.exports = [
             );
             assert.ok(result.protocolEntries.some((entry) => entry.text === 'Keine Parteien/Stimmen f\u00fcr Verh\u00e4ltnisausgleich. Nur Direktmandate werden vergeben.'));
         }
+    },
+    {
+        name: 'NrwKWahlGCalculator returns the documented result contract shape',
+        run() {
+            const calculator = createCalculator();
+            const parties = [
+                { id: 'a', abbreviation: 'A', color: '#111111', votes: 600, directMandates: 2, isListApproved: true, tempSortKey: 'A' },
+                { id: 'b', abbreviation: 'B', color: '#222222', votes: 400, directMandates: 0, isListApproved: true, tempSortKey: 'B' }
+            ];
+
+            const result = calculator.calculate(parties, 5, 1000, {});
+
+            assert.ok(Array.isArray(result.allocatedParties));
+            assert.ok(Array.isArray(result.protocolEntries));
+            assert.ok(Array.isArray(result.lotteryInfos));
+            assert.equal(typeof result.allocatedParties[0].id, 'string');
+            assert.equal(typeof result.allocatedParties[0].seats, 'number');
+            assert.equal(typeof result.allocatedParties[0].directMandatesAwarded, 'number');
+            assert.equal(typeof result.allocatedParties[0].listSeatsAwarded, 'number');
+        }
     }
 ];
