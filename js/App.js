@@ -133,6 +133,7 @@
         this.appPersistence = new AppPersistence(this);
         this.scenarioFlow = new ScenarioFlow(this);
         this.modalController = new ModalController(this.DOM);
+        this.customColorFlow = new CustomColorFlow(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -377,43 +378,7 @@
 
     // ERSETZT: Diese Funktion wird um die Custom Mappings erweitert
     _updateColorFromName(name, colorPreviewEl, colorInputEl) {
-        const upperName = name.toUpperCase().trim();
-
-        // 1. PrÃ¼fe Custom Mappings (hÃ¶chste PrioritÃ¤t)
-        const customMapping = this.state.customColorMappings.find(m => m.name.toUpperCase() === upperName);
-        if (customMapping) {
-            colorPreviewEl.style.background = customMapping.color;
-            colorInputEl.value = customMapping.color;
-            return;
-        }
-
-        // 2. PrÃ¼fe Standard-Mappings (partyColorMap)
-        let singleColor = this.partyColorMap[upperName];
-        if (singleColor) {
-            colorPreviewEl.style.background = singleColor;
-            colorInputEl.value = singleColor;
-            return;
-        }
-
-        // 3. PrÃ¼fe kombinierte Namen (z.B. "CDU/CSU")
-        const splitNames = upperName.split(/[\/&+,]/);
-        if (splitNames.length > 1) {
-            const colors = splitNames
-                .map(n => {
-                    const trimmedUpper = n.trim();
-                    // PrÃ¼fe Custom ODER Default Map
-                    const custom = this.state.customColorMappings.find(m => m.name.toUpperCase() === trimmedUpper);
-                    return custom ? custom.color : this.partyColorMap[trimmedUpper];
-                })
-                .filter(Boolean);
-
-            if (colors.length > 0) {
-                const gradient = this._createGradient(colors);
-                colorPreviewEl.style.background = gradient;
-                colorInputEl.value = colors[0]; // Nimm die erste gefundene Farbe fÃ¼r den Picker
-                return;
-            }
-        }
+        this.customColorFlow.updateColorFromName(name, colorPreviewEl, colorInputEl);
     }
 
     /**
@@ -658,153 +623,35 @@
      * Zeigt das Modal zur Verwaltung der eigenen Farb-Mappings an.
      */
     showColorMappingModal() {
-        // Container fÃ¼r den Modal-Inhalt erstellen
-        const container = document.createElement('div');
-        container.id = 'custom-mappings-container';
-        container.innerHTML = `
-            <p>Hier kÃ¶nnen Sie eigene Parteinamen (z.B. lokale WÃ¤hlergruppen) und Farben definieren. Diese werden automatisch erkannt, wenn Sie den Namen in der Liste eintragen.</p>
-            <p>Die Mappings werden in Ihrem Browser gespeichert.</p>
-            <div id="custom-mappings-list">
-                <!-- Liste wird dynamisch befÃ¼llt -->
-            </div>
-            <button id="modal-add-mapping" class="btn-add" style="margin-top: 10px;">+ Neues Mapping hinzufÃ¼gen</button>
-            <div style="text-align: right; margin-top: 20px;">
-                <button id="modal-btn-close" class="btn-secondary">SchlieÃŸen</button>
-            </div>
-        `;
-
-        // Modal anzeigen (verwenden das existierende System)
-        this._showModal('Eigene Farben verwalten', container.innerHTML);
-
-        // WICHTIG: Die Event-Listener erst *nach* dem Anzeigen des Modals hinzufÃ¼gen,
-        // da _showModal den innerHTML neu setzt.
-        document.getElementById('modal-add-mapping').addEventListener('click', () => {
-            this.addCustomMapping();
-            this.renderCustomMappingList(); // Liste im Modal neu zeichnen
-        });
-
-        document.getElementById('modal-btn-close').addEventListener('click', () => {
-            this._hideModal();
-        });
-
-        // Wir mÃ¼ssen den 'X'-Button (csv-modal-close) neu binden,
-        // da _showModal keinen Promise-basierten SchlieÃŸ-Mechanismus hat.
-        // Wir entfernen den alten Listener und fÃ¼gen einen neuen hinzu, der nur schlieÃŸt.
-        const oldCloseBtn = this.DOM.csvModalClose;
-        const newCloseBtn = oldCloseBtn.cloneNode(true);
-        oldCloseBtn.parentNode.replaceChild(newCloseBtn, oldCloseBtn);
-        this.DOM.csvModalClose = newCloseBtn; // Referenz im DOM-Objekt aktualisieren
-
-        newCloseBtn.addEventListener('click', () => {
-             this._hideModal();
-        });
-
-        // Liste im Modal initial rendern
-        this.renderCustomMappingList();
+        this.customColorFlow.showColorMappingModal();
     }
 
     /**
      * (Hilfsfunktion) Zeichnet die Liste der Mappings *innerhalb* des Modals.
      */
     renderCustomMappingList() {
-        const listContainer = document.getElementById('custom-mappings-list');
-        if (!listContainer) return; // Modal ist nicht offen
-
-        listContainer.innerHTML = ''; // Liste leeren
-
-        if (this.state.customColorMappings.length === 0) {
-            listContainer.innerHTML = '<p style="padding: 10px; text-align: center; color: var(--text-muted);">Keine eigenen Mappings. Klicken Sie auf "HinzufÃ¼gen".</p>';
-        }
-
-        this.state.customColorMappings.forEach((mapping, index) => {
-            const mappingDiv = document.createElement('div');
-            mappingDiv.className = 'mapping-item';
-            mappingDiv.dataset.index = index;
-
-            mappingDiv.innerHTML = `
-                <div class="color-input-wrapper">
-                    <div class="color-preview" style="background: ${mapping.color};" tabindex="0"></div>
-                    <input type="color" class="color-picker-hidden" value="${mapping.color}">
-                </div>
-                <input type="text" placeholder="Name (z.B. 'UWG')" value="${mapping.name}" class="mapping-name">
-                <input type="text" placeholder="#FF0000" value="${mapping.color}" class="mapping-color-text" style="font-size: 0.9em;">
-                <button class="btn-remove">X</button>
-            `;
-
-            listContainer.appendChild(mappingDiv);
-
-            // Event-Listener fÃ¼r dieses Item
-            const colorPreview = mappingDiv.querySelector('.color-preview');
-            const colorInput = mappingDiv.querySelector('.color-picker-hidden');
-            const nameInput = mappingDiv.querySelector('.mapping-name');
-            const colorText = mappingDiv.querySelector('.mapping-color-text');
-            const removeBtn = mappingDiv.querySelector('.btn-remove');
-
-            // Farbe Ã¤ndern (Picker)
-            colorInput.addEventListener('change', () => {
-                const newColor = colorInput.value;
-                colorPreview.style.background = newColor;
-                colorText.value = newColor;
-                this.updateCustomMapping(index, { color: newColor });
-            });
-            // Farbe Ã¤ndern (Textfeld)
-            colorText.addEventListener('input', () => {
-                const newColor = colorText.value;
-                // Einfache Validierung
-                if (/^#[0-9a-fA-F]{6}$/.test(newColor) || /^[a-zA-Z]+$/.test(newColor)) {
-                    colorPreview.style.background = newColor;
-                    colorInput.value = newColor;
-                    this.updateCustomMapping(index, { color: newColor });
-                }
-            });
-            // Name Ã¤ndern
-            nameInput.addEventListener('change', () => { // 'change' (beim Verlassen) statt 'input'
-                this.updateCustomMapping(index, { name: nameInput.value });
-            });
-            // LÃ¶schen
-            removeBtn.addEventListener('click', () => {
-                this.removeCustomMapping(index);
-                this.renderCustomMappingList(); // Liste neu zeichnen
-            });
-            // A11y (Tastatur-Steuerung)
-            colorPreview.addEventListener('click', () => colorInput.click());
-            colorPreview.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    colorInput.click();
-                }
-            });
-        });
+        this.customColorFlow.renderCustomMappingList();
     }
 
     /**
      * FÃ¼gt ein leeres Mapping zum State hinzu.
      */
     addCustomMapping() {
-        this.state.customColorMappings.push({
-            name: '',
-            color: '#cccccc'
-        });
+        this.customColorFlow.addCustomMapping();
     }
 
     /**
      * Aktualisiert ein Mapping im State.
      */
     updateCustomMapping(index, updates) {
-        if (this.state.customColorMappings[index]) {
-            Object.assign(this.state.customColorMappings[index], updates);
-            // Sofortiges Speichern im LocalStorage bei Ã„nderung
-            this._saveStateToStorage();
-        }
+        this.customColorFlow.updateCustomMapping(index, updates);
     }
 
     /**
      * Entfernt ein Mapping aus dem State.
      */
     removeCustomMapping(index) {
-        this.state.customColorMappings.splice(index, 1);
-        // Sofortiges Speichern im LocalStorage bei Ã„nderung
-        this._saveStateToStorage();
+        this.customColorFlow.removeCustomMapping(index);
     }
 
     /**
