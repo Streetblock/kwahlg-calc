@@ -131,6 +131,7 @@
         this.committeeFlow = new CommitteeFlow(this);
         this.simpleFlow = new SimpleFlow(this);
         this.appPersistence = new AppPersistence(this);
+        this.scenarioFlow = new ScenarioFlow(this);
 
         // KORREKTUR: CoalitionAnalyzers initialisieren
         // Der 'councilSize' Input existiert, dieser Analyzer funktioniert.
@@ -536,43 +537,7 @@
      * Setzt die RatsgrÃ¶ÃŸe und fÃ¼llt die Parteiliste.
      */
      loadPreset(presetId) {
-        console.log(`Lade Preset: ${presetId}`);
-        // Finde das Preset in der globalen Datenbank
-        let preset = PRESET_DATABASE.presets.find(p => p.id === presetId);
-
-        if (!preset) {
-            console.warn(`Preset-ID "${presetId}" nicht gefunden. Lade Standard-Preset.`);
-            const defaultId = PRESET_DATABASE.defaultPresetId;
-            preset = PRESET_DATABASE.presets.find(p => p.id === defaultId);
-            if (!preset) {
-                console.error("KRITISCHER FEHLER: Kein Default-Preset gefunden!");
-                return; // Abbruch
-            }
-        }
-
-        // 1. UI-Elemente fÃ¼r NRW-Modus zurÃ¼cksetzen
-        this.clearAllParties(true);
-
-        // 2. RatsgrÃ¶ÃŸe aus dem Preset setzen
-        this.DOM.councilSize.value = preset.councilSize;
-
-        // 3. Parteien aus dem Preset hinzufÃ¼gen
-        if (preset.parties && Array.isArray(preset.parties)) {
-            preset.parties.forEach(party => {
-                this.addParty(
-                    party.name,
-                    party.votes,
-                    party.directMandates,
-                    party.color || ''
-                );
-            });
-        }
-
-        // 4. NEU: Status und Dropdown-UI aktualisieren
-        this.state.currentPresetId = preset.id;
-        if (this.DOM.presetSelect) { // Sicherstellen, dass es existiert
-            this.DOM.presetSelect.value = preset.id;
-        }
+        this.scenarioFlow.loadPreset(presetId);
     }
 
     /**
@@ -580,30 +545,7 @@
      * basierend auf der PRESET_DATABASE.
      */
      _populatePresetDropdown() {
-        if (!this.DOM.presetSelect) return;
-        this.DOM.presetSelect.innerHTML = ''; // Vorherige Optionen leeren
-
-        // NEU: Option fÃ¼r den gespeicherten Zustand
-        // Diese Option dient als Indikator.
-        const savedOption = document.createElement('option');
-        savedOption.value = 'user_saved_state'; // Eine eindeutige ID
-        savedOption.textContent = 'Mein gespeicherter Stand';
-        this.DOM.presetSelect.appendChild(savedOption);
-
-        // NEU: Trennlinie
-        const separator = document.createElement('option');
-        separator.textContent = '--- Voreinstellungen laden ---';
-        separator.disabled = true;
-        this.DOM.presetSelect.appendChild(separator);
-
-
-        // EintrÃ¤ge aus der Datenbank erstellen
-        PRESET_DATABASE.presets.forEach(preset => {
-            const option = document.createElement('option');
-            option.value = preset.id;
-            option.textContent = preset.name;
-            this.DOM.presetSelect.appendChild(option);
-        });
+        this.scenarioFlow.populatePresetDropdown();
     }
 
     // ==========================================================
@@ -792,198 +734,16 @@
     }
 
     exportScenario() {
-        const partiesData = this._getPartiesFromUI();
-        const scenario = partiesData.map(p => ({ name: p.abbreviation, votes: p.votes, directMandates: p.directMandates, color: p.color }));
-        const dataStr = JSON.stringify(scenario, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const exportFileDefaultName = 'rat-szenario.json';
-        let linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
+        this.scenarioFlow.exportScenario();
     }
-    importScenario(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const scenario = JSON.parse(e.target.result);
-                if (!Array.isArray(scenario)) throw new Error("JSON must be an array.");
-                this.clearAllParties(true);
 
-                scenario.forEach(p => { this.addParty(p.name, p.votes, p.directMandates, p.color, p.seats || 0); });
-            } catch (err) {
-                this._showModal("Import-Fehler", `<p>Fehler beim Laden der Szenario-Datei:</p><p><strong>${err.message}</strong></p>`);
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = null;
+    importScenario(event) {
+        this.scenarioFlow.importScenario(event);
     }
 
     // ÃœBERARBEITET: Import-Funktion fÃ¼r VoteManager (nutzt jetzt Modal)
     importVoteManagerCSV(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            try {
-                const content = e.target.result;
-                // Leere Zeilen am Ende entfernen
-                const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
-
-                if (lines.length < 2) {
-                    // Wir brauchen mindestens eine Header-Zeile und eine Daten-Zeile
-                    throw new Error("CSV-Datei ist zu kurz. Erwarte mind. 1 Header-Zeile und 1 Daten-Zeile.");
-                }
-
-                // Annahme: Zeile 0 = Technischer Header, Zeile 1+ = Daten (Wahlbezirke)
-                const headerTech = lines[0].split(';');
-                const dataLines = lines.slice(1);
-
-                // Speichert { index: i, id: 'D1', votes: 0, directMandates: 0 }
-                const partyColumns = [];
-                // Speichert { districtName: '...', tiedParties: ['D1', 'D2'], votes: 123 }
-                let districtTies = [];
-                let gebietNameIndex = 4; // Standard-Index fÃ¼r 'gebiet-name'
-
-                // --- 1. Finde alle Parteien-Spalten (D1, D2...) ---
-                headerTech.forEach((col, index) => {
-                    const colTrimmed = col.trim();
-                    const colNumPart = colTrimmed.substring(1);
-
-                    // KORRIGIERTE PRÃœFUNG: Muss 'D' + Zahl sein (ignoriert 'D' selbst)
-                    if (colTrimmed.startsWith('D') && colNumPart.length > 0 && !isNaN(colNumPart)) {
-                        partyColumns.push({
-                            index: index,
-                            id: colTrimmed, // z.B. 'D1'
-                            votes: 0,
-                            directMandates: 0
-                        });
-                    }
-
-                    // Finde die Spalte 'gebiet-name' fÃ¼r die Tie-Breaker-Meldung
-                    if (colTrimmed.toLowerCase() === 'gebiet-name') {
-                        gebietNameIndex = index;
-                    }
-                });
-
-                if (partyColumns.length === 0) {
-                    throw new Error("Keine gÃ¼ltigen Parteien-Spalten (D1, D2, ...) in der Header-Zeile gefunden.");
-                }
-
-                // --- 2. Iteriere durch Wahlbezirke (Datenzeilen) ---
-                dataLines.forEach(line => {
-                    const values = line.split(';');
-                    if (values.length < headerTech.length) return; // UnvollstÃ¤ndige Zeilen Ã¼berspringen
-
-                    let maxVotes = -1;
-                    let districtWinners = []; // Kann mehrere EintrÃ¤ge bei Gleichstand haben
-
-                    const districtName = values[gebietNameIndex] ? values[gebietNameIndex].trim() : 'Unbekannter Bezirk';
-
-                    partyColumns.forEach(party => {
-                        const voteValueStr = values[party.index];
-                        if (!voteValueStr) return; // Zelle ist leer
-
-                        const voteValue = parseInt(voteValueStr, 10);
-                        if (isNaN(voteValue) || voteValue < 0) return; // Kein gÃ¼ltiger Wert
-
-                        // A) Gesamtstimmen summieren
-                        party.votes += voteValue;
-
-                        // B) Direktmandat fÃ¼r diesen Bezirk ermitteln
-                        if (voteValue > maxVotes) {
-                            maxVotes = voteValue;
-                            districtWinners = [party.id]; // Neuer alleiniger Gewinner
-                        } else if (voteValue === maxVotes && maxVotes > 0) {
-                            districtWinners.push(party.id); // Gleichstand
-                        }
-                    });
-
-                    // C) Direktmandate zuweisen ODER Losentscheid-Fall speichern
-                    if (districtWinners.length === 1 && maxVotes > 0) {
-                        // Eindeutiger Gewinner
-                        const winnerParty = partyColumns.find(p => p.id === districtWinners[0]);
-                        if (winnerParty) {
-                            winnerParty.directMandates++;
-                        }
-                    } else if (districtWinners.length > 1) {
-                        // Gleichstand (Losentscheid)
-                        districtTies.push({
-                            districtName: districtName,
-                            tiedParties: districtWinners,
-                            votes: maxVotes
-                        });
-                    }
-                    // (Wenn maxVotes = 0, gewinnt niemand)
-                });
-
-                // --- 3. UI aktualisieren ---
-                this.clearAllParties(true); // Bestehende Parteien lÃ¶schen
-
-                const anzahlWahlbezirke = dataLines.length;
-                if (anzahlWahlbezirke > 0) {
-                    this.DOM.councilSize.value = anzahlWahlbezirke * 2;
-                }
-
-                // FÃ¼ge nur Parteien hinzu, die auch Stimmen bekommen haben
-                partyColumns.filter(p => p.votes > 0).forEach(party => {
-                    this.addParty(
-                        `Partei ${party.id}`, // Platzhaltername!
-                        party.votes,
-                        party.directMandates,
-                        '' // Farbe automatisch zuweisen lassen
-                    );
-                });
-
-                // --- 4. User Ã¼ber Ergebnis UND Losentscheide im MODAL informieren ---
-                let totalMandatesFound = partyColumns.reduce((sum, p) => sum + p.directMandates, 0);
-
-                // Build HTML for modal
-                let modalHTML = `<p>Der CSV-Import war erfolgreich.</p><ul>`;
-                modalHTML += `<li><strong>Parteien gefunden:</strong> ${partyColumns.filter(p => p.votes > 0).length}</li>`;
-                modalHTML += `<li><strong>Eindeutige Mandate:</strong> ${totalMandatesFound}</li>`;
-                modalHTML += `</ul>`;
-
-                modalHTML += `<h4>Wichtige Hinweise</h4>`;
-                modalHTML += `<p><strong>1. Platzhalter-Namen:</strong> Die Parteinamen (z.B. 'Partei D1') sind Platzhalter. Bitte benennen Sie diese in der Liste manuell um (z.B. in 'CDU').</p>`;
-
-                if (districtTies.length > 0) {
-                    modalHTML += `<div class="tie-warning">`; // Spezielle CSS-Klasse
-                    modalHTML += `<p><strong>2. WARNUNG: ${districtTies.length} LOSENTSCHEIDE SIND OFFEN!</strong></p>`;
-                    modalHTML += "<p>In folgenden Wahlbezirken gab es einen Gleichstand. Diese Mandate wurden <strong>NOCH NICHT</strong> zugeteilt. Bitte addieren Sie die Gewinner-Mandate nach dem (realen) Losentscheid manuell in der UI:</p>";
-
-                    modalHTML += `<ul>`; // Innere Liste fÃ¼r die Bezirke
-                    districtTies.forEach(tie => {
-                        modalHTML += `<li><strong>Bezirk '${tie.districtName}'</strong>: Gleichstand (${tie.votes} Stimmen) zwischen <strong>${tie.tiedParties.join(', ')}</strong></li>`;
-                    });
-                    modalHTML += `</ul></div>`;
-                } else {
-                    modalHTML += `<p><strong>2. Losentscheide:</strong> Es wurden keine unentschiedenen Direktmandate (Losentscheide) gefunden. Alle ${totalMandatesFound} Mandate wurden zugeteilt.</p>`;
-                }
-
-                // Zeige das Modal
-                this._showModal("Import-Ergebnis", modalHTML);
-
-            } catch (err) {
-                // Fehlerfall: Zeige Fehler im Modal
-                this._showModal("Import-Fehler", `<p style="color:var(--danger-color);">Ein Fehler ist aufgetreten:</p><p><strong>${err.message}</strong></p><p>Bitte prÃ¼fen Sie die Datei und das Format.</p>`);
-            } finally {
-                // File-Input zurÃ¼cksetzen
-                event.target.value = null;
-            }
-        };
-
-        reader.onerror = () => {
-             // Fehlerfall: Zeige Fehler im Modal
-            this._showModal("Lese-Fehler", `<p style="color:var(--danger-color);">Die Datei konnte nicht gelesen werden.</p>`);
-            event.target.value = null;
-        };
-
-        // VoteManager-Exporte sind UTF-8 kodiert nicht 'ISO-8859-1' (ANSI)
-        reader.readAsText(file, 'UTF-8');
+        this.scenarioFlow.importVoteManagerCSV(event);
     }
 
 
