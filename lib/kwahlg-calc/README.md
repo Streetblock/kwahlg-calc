@@ -46,6 +46,12 @@ const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
 npm run build:kwahlg-calc
 ```
 
+### Verify bundle is up to date
+
+```bash
+npm run check:kwahlg-calc-dist
+```
+
 ## Public API
 
 ### SainteLagueAllocator
