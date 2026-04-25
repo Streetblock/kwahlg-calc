@@ -184,7 +184,9 @@ class NrwCouncilFlow {
         }
 
         const totalVotesForProportionality = partiesData.reduce((sum, party) => sum + party.votes, 0);
-        const allocator = new NrwKWahlGCalculator(new SainteLagueAllocator());
+        const allocator = new this.app.calcLib.NrwKWahlGCalculator(
+            new this.app.calcLib.SainteLagueAllocator()
+        );
         const result = allocator.calculate(partiesData, initialTotalSeats, totalVotesForProportionality, {});
 
         this.app.state.councilResults = result.allocatedParties;

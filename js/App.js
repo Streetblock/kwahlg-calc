@@ -81,6 +81,7 @@
             resetApplicationButton: document.getElementById('resetApplicationButton')
         };
 
+        this.calcLib = this._resolveCalcLibrary();
         this.appState = new AppState();
         this.state = {
             councilResults: [],
@@ -126,7 +127,7 @@
         this.simpleHemicycleRenderer = new HemicycleRenderer('simpleSeatHemicycleDiagram', 'simpleSeatHemicycleLegend');
         // --- Ende HinzufÃ¼gung ---
 
-        this.committeeCalculator = new CommitteeCalculator();
+        this.committeeCalculator = new this.calcLib.CommitteeCalculator();
         this.nrwCouncilFlow = new NrwCouncilFlow(this);
         this.committeeFlow = new CommitteeFlow(this);
         this.simpleFlow = new SimpleFlow(this);
@@ -178,6 +179,14 @@
 
         this.renderSimpleSizeInputs();
         this.renderCommitteeSizeInputs();
+    }
+
+    _resolveCalcLibrary() {
+        if (typeof globalThis !== 'undefined' && globalThis.KWahlGCalcLib) {
+            return globalThis.KWahlGCalcLib;
+        }
+
+        throw new Error('KWahlGCalcLib ist nicht geladen. Bitte zuerst lib/kwahlg-calc/index.js einbinden.');
     }
 
     _bindEvents() {

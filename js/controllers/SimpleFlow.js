@@ -136,13 +136,13 @@ class SimpleFlow {
         let allocator;
         switch (procedure) {
             case 'hare':
-                allocator = new HareNiemeyerAllocator();
+                allocator = new this.app.calcLib.HareNiemeyerAllocator();
                 break;
             case 'sainte':
-                allocator = new SainteLagueAllocator();
+                allocator = new this.app.calcLib.SainteLagueAllocator();
                 break;
             case 'dhondt':
-                allocator = new DHondtAllocator();
+                allocator = new this.app.calcLib.DHondtAllocator();
                 break;
             default:
                 return;
