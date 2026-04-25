@@ -1,21 +1,164 @@
 # KWahlG Calc
 
-Browser- and Node-compatible calculation core for:
+`kwahlg-calc` is the browser- and Node-compatible calculation core for this project.
 
-- Sainte-Lague / Schepers
-- D'Hondt
-- Hare-Niemeyer
-- NRW KWahlG council seat allocation
-- committee seat allocation
+It currently exposes:
 
-Public API:
+- `SainteLagueAllocator`
+- `DHondtAllocator`
+- `HareNiemeyerAllocator`
+- `NrwKWahlGCalculator`
+- `CommitteeCalculator`
+
+## Usage
+
+### Node
 
 ```js
 const {
   SainteLagueAllocator,
-  DHondtAllocator,
-  HareNiemeyerAllocator,
   NrwKWahlGCalculator,
   CommitteeCalculator
 } = require("./lib/kwahlg-calc");
 ```
+
+### Browser
+
+Load the calculator scripts and library entrypoint in order:
+
+```html
+<script src="./js/math/Allocators.js"></script>
+<script src="./js/math/NrwCalculator.js"></script>
+<script src="./js/math/CommitteeCalculator.js"></script>
+<script src="./lib/kwahlg-calc/index.js"></script>
+```
+
+After that, the public API is available as:
+
+```js
+const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
+```
+
+## Public API
+
+### SainteLagueAllocator
+
+```js
+const allocator = new SainteLagueAllocator();
+const result = allocator.calculate(parties, totalSeats);
+```
+
+Input:
+
+- `parties`: array of objects with at least `id`, `abbreviation`, `color`, `votes`
+- `totalSeats`: integer
+
+Returns:
+
+- `partyResults`
+- `protocolEntries`
+- `lotteryInfos`
+- `tieInfo`
+
+### DHondtAllocator
+
+```js
+const allocator = new DHondtAllocator();
+const result = allocator.calculate(parties, totalSeats);
+```
+
+Returns:
+
+- `partyResults`
+- `allocationTable`
+- `protocolEntries`
+- `lotteryInfos`
+- `tieInfo`
+
+### HareNiemeyerAllocator
+
+```js
+const allocator = new HareNiemeyerAllocator();
+const result = allocator.calculate(parties, totalSeats, totalVotes);
+```
+
+Returns:
+
+- `partyResults`
+- `protocolEntries`
+- `lotteryInfos`
+- `tieInfo`
+
+### NrwKWahlGCalculator
+
+```js
+const baseAllocator = new SainteLagueAllocator();
+const calculator = new NrwKWahlGCalculator(baseAllocator);
+
+const result = calculator.calculate(parties, 66, totalVotes, {
+  votesIndividualCandidates: 0,
+  seatsWonByIndividualCandidates: 0,
+  votesPartiesWithoutListPauschal: 0,
+  seatsWonByPartiesWithoutListPauschal: 0
+});
+```
+
+Input party records should contain:
+
+- `id`
+- `abbreviation`
+- `color`
+- `votes`
+- `directMandates`
+- optional `isListApproved`
+
+Returns:
+
+- `allocatedParties`
+- `protocolEntries`
+- `lotteryInfos`
+- `tieInfo`
+
+Each `allocatedParties` record contains:
+
+- `id`
+- `abbreviation`
+- `color`
+- `votes`
+- `seats`
+- `directMandatesWon`
+- `directMandatesAwarded`
+- `listSeatsAwarded`
+
+### CommitteeCalculator
+
+```js
+const calculator = new CommitteeCalculator();
+
+const result = calculator.calculate({
+  committeeSizes: [5, 7],
+  councilResults,
+  factionAlliances: [],
+  manualVotes,
+  mode: "hare"
+});
+```
+
+Returns:
+
+- `calculationBasis`
+- `individualMembers`
+- `totalVotes`
+- `mode`
+- `displayMode`
+- `title`
+- `results`
+- `protocolEntries`
+
+`results` is keyed by committee size.
+
+## Notes
+
+- The library currently supports CommonJS in Node.
+- In browser usage, the API is exposed globally as `KWahlGCalcLib`.
+- Protocol output is structured data intended for renderer consumption, not HTML strings.
