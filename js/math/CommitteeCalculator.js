@@ -1,11 +1,19 @@
+let CommitteeHareNiemeyerAllocator;
+let CommitteeDHondtAllocator;
+
 if (typeof module !== 'undefined' && module.exports) {
-    var { HareNiemeyerAllocator, DHondtAllocator } = require('./Allocators');
+    const allocators = require('./Allocators');
+    CommitteeHareNiemeyerAllocator = allocators.HareNiemeyerAllocator;
+    CommitteeDHondtAllocator = allocators.DHondtAllocator;
+} else {
+    CommitteeHareNiemeyerAllocator = HareNiemeyerAllocator;
+    CommitteeDHondtAllocator = DHondtAllocator;
 }
 
 class CommitteeCalculator {
     constructor(options = {}) {
-        this.hareAllocator = options.hareAllocator || new HareNiemeyerAllocator();
-        this.dhondtAllocator = options.dhondtAllocator || new DHondtAllocator();
+        this.hareAllocator = options.hareAllocator || new CommitteeHareNiemeyerAllocator();
+        this.dhondtAllocator = options.dhondtAllocator || new CommitteeDHondtAllocator();
     }
 
     buildCalculationContext(councilResults, factionAlliances, manualVotes) {
