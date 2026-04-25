@@ -27,13 +27,19 @@ The library package lives in `lib/kwahlg-calc` and supports:
 - structured protocol output for renderer/UI consumption
 - Node/CommonJS usage and browser bundle usage via `KWahlGCalcLib`
 
-Public browser bundle:
+Browser usage:
 
 ```html
 <script src="./lib/kwahlg-calc/dist/kwahlg-calc.umd.js"></script>
 ```
 
-Public Node entry:
+Then consume:
+
+```js
+const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
+```
+
+Node usage:
 
 ```js
 const { NrwKWahlGCalculator, CommitteeCalculator } = require("./lib/kwahlg-calc");
@@ -50,6 +56,9 @@ The Sitzrechner app (`index.html`) provides:
 - charts and practical UI controls for interactive analysis
 
 The app acts as the reference consumer of the library API.
+
+Live app:
+[https://streetblock.github.io/kwahlg-calc/](https://streetblock.github.io/kwahlg-calc/)
 
 ## Repository layout
 
@@ -69,18 +78,6 @@ npm run build:kwahlg-calc
 npm run check:kwahlg-calc-dist
 npm test
 ```
-
-## GitHub Pages (app publishing)
-
-If you want to publish the app via GitHub Pages:
-
-1. Push the repository to GitHub.
-2. In repository settings, open `Pages`.
-3. Set source to `Deploy from a branch`.
-4. Choose branch `main` and folder `/ (root)`.
-5. Save and wait for Pages to publish.
-
-After publishing, `index.html` is served as the app entry page.
 
 ## License
 
