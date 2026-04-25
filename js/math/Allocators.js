@@ -1,4 +1,11 @@
 class SainteLagueAllocator {
+    /**
+     * Returns:
+     * - `partyResults`: normalized seat results per party
+     * - `protocolEntries`: structured calculation protocol
+     * - `lotteryInfos`: resolved lottery metadata
+     * - `tieInfo`: unresolved tie information, if present
+     */
     calculate(partiesData, totalSeats) {
         const protocolEntries = [];
         const lotteryInfos = [];
@@ -109,6 +116,14 @@ class SainteLagueAllocator {
 }
 
 class DHondtAllocator {
+    /**
+     * Returns:
+     * - `partyResults`: normalized seat results per party
+     * - `allocationTable`: detailed seat-by-seat allocation rows
+     * - `protocolEntries`: structured calculation protocol
+     * - `lotteryInfos`: resolved lottery metadata
+     * - `tieInfo`: unresolved tie information, if present
+     */
     calculate(partiesData, totalSeats) {
         const protocolEntries = [];
         const parties = JSON.parse(JSON.stringify(partiesData.map((party) => ({
@@ -220,6 +235,13 @@ class DHondtAllocator {
 }
 
 class HareNiemeyerAllocator {
+    /**
+     * Returns:
+     * - `partyResults`: normalized seat results per party
+     * - `protocolEntries`: structured calculation protocol
+     * - `lotteryInfos`: resolved lottery metadata
+     * - `tieInfo`: unresolved tie information, if present
+     */
     calculate(partiesData, totalSeats, totalVotes) {
         const parties = JSON.parse(JSON.stringify(partiesData.map((party) => ({
             ...party,
