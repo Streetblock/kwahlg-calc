@@ -59,5 +59,22 @@ module.exports = [
             assert.equal(typeof context.KWahlGCalcLib.NrwKWahlGCalculator, 'function');
             assert.equal(typeof context.KWahlGCalcLib.CommitteeCalculator, 'function');
         }
+    },
+    {
+        name: 'KWahlG calculation library fails clearly when browser prerequisites are missing',
+        run() {
+            const context = {
+                console,
+                JSON,
+                Math
+            };
+            context.globalThis = context;
+            vm.createContext(context);
+
+            assert.throws(
+                () => runScriptInContext('lib/kwahlg-calc/index.js', context),
+                /Missing exports: SainteLagueAllocator, DHondtAllocator, HareNiemeyerAllocator, NrwKWahlGCalculator, CommitteeCalculator/
+            );
+        }
     }
 ];
