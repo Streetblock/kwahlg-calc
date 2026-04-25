@@ -40,7 +40,7 @@ module.exports = [
         }
     },
     {
-        name: 'KWahlG calculation library exposes browser globals without CommonJS',
+        name: 'KWahlG calculation browser bundle exposes globals without CommonJS',
         run() {
             const context = {
                 console,
@@ -50,10 +50,7 @@ module.exports = [
             context.globalThis = context;
             vm.createContext(context);
 
-            runScriptInContext('lib/kwahlg-calc/src/Allocators.js', context);
-            runScriptInContext('lib/kwahlg-calc/src/NrwCalculator.js', context);
-            runScriptInContext('lib/kwahlg-calc/src/CommitteeCalculator.js', context);
-            runScriptInContext('lib/kwahlg-calc/index.js', context);
+            runScriptInContext('lib/kwahlg-calc/dist/kwahlg-calc.umd.js', context);
 
             assert.equal(typeof context.KWahlGCalcLib.SainteLagueAllocator, 'function');
             assert.equal(typeof context.KWahlGCalcLib.NrwKWahlGCalculator, 'function');
@@ -61,7 +58,7 @@ module.exports = [
         }
     },
     {
-        name: 'KWahlG calculation library fails clearly when browser prerequisites are missing',
+        name: 'KWahlG calculation library entrypoint fails clearly when browser prerequisites are missing',
         run() {
             const context = {
                 console,

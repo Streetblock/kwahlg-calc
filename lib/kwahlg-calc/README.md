@@ -28,20 +28,22 @@ The calculator app itself is the primary browser example for this library. The p
 `index.html` loads the calculation core in classic script mode and uses the same
 browser-compatible math files that back this package.
 
-If you want to consume the packaged browser API directly, load the calculator scripts and
-library entrypoint in order:
+If you want to consume the packaged browser API directly, load the browser bundle:
 
 ```html
-<script src="./lib/kwahlg-calc/src/Allocators.js"></script>
-<script src="./lib/kwahlg-calc/src/NrwCalculator.js"></script>
-<script src="./lib/kwahlg-calc/src/CommitteeCalculator.js"></script>
-<script src="./lib/kwahlg-calc/index.js"></script>
+<script src="./lib/kwahlg-calc/dist/kwahlg-calc.umd.js"></script>
 ```
 
 After that, the public API is available globally as:
 
 ```js
 const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
+```
+
+### Build browser bundle
+
+```bash
+npm run build:kwahlg-calc
 ```
 
 ## Public API

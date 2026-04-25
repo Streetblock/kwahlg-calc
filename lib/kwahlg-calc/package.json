@@ -1,5 +1,13 @@
 {
   "name": "kwahlg-calc",
   "private": true,
-  "main": "index.js"
+  "main": "index.js",
+  "browser": "dist/kwahlg-calc.umd.js",
+  "exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./dist/kwahlg-calc.umd.js": "./dist/kwahlg-calc.umd.js"
+  }
 }

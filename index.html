@@ -606,11 +606,8 @@
     </div>
 </div>
 
-<!-- Calculation core: browser-compatible math files plus the public library API -->
-<script src="./lib/kwahlg-calc/src/Allocators.js"></script>
-<script src="./lib/kwahlg-calc/src/NrwCalculator.js"></script>
-<script src="./lib/kwahlg-calc/src/CommitteeCalculator.js"></script>
-<script src="./lib/kwahlg-calc/index.js"></script>
+<!-- Calculation core: single browser bundle exposing KWahlGCalcLib -->
+<script src="./lib/kwahlg-calc/dist/kwahlg-calc.umd.js"></script>
 
 <!-- Sitzrechner app: example consumer of the public KWahlGCalcLib browser API -->
 <script src="./js/state/AppState.js"></script>
