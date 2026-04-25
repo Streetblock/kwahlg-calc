@@ -38,9 +38,9 @@ function loadCommitteeCalculator() {
 }
 
 function loadKwahlgCalcLib() {
-    const entrypointPath = path.join(workspaceRoot, 'lib', 'kwahlg-calc', 'index.js');
-    delete require.cache[require.resolve(entrypointPath)];
-    const library = require(entrypointPath);
+    const packagePath = path.join(workspaceRoot, 'lib', 'kwahlg-calc');
+    delete require.cache[require.resolve(packagePath)];
+    const library = require(packagePath);
 
     return { ...library, context: createMathContext() };
 }

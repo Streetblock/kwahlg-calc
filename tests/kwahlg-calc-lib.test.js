@@ -29,10 +29,10 @@ module.exports = [
     {
         name: 'KWahlG calculation library is directly requireable in Node',
         run() {
-            const entrypointPath = path.join(workspaceRoot, 'lib', 'kwahlg-calc', 'index.js');
-            delete require.cache[require.resolve(entrypointPath)];
+            const packagePath = path.join(workspaceRoot, 'lib', 'kwahlg-calc');
+            delete require.cache[require.resolve(packagePath)];
 
-            const library = require(entrypointPath);
+            const library = require(packagePath);
 
             assert.equal(typeof library.SainteLagueAllocator, 'function');
             assert.equal(typeof library.NrwKWahlGCalculator, 'function');
