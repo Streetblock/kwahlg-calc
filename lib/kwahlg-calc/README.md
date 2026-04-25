@@ -176,4 +176,4 @@ Returns:
 - The Sitzrechner app itself serves as the reference browser integration.
 - In browser usage, the API is exposed globally as `KWahlGCalcLib`.
 - Protocol output is structured data intended for renderer consumption, not HTML strings.
-- License: [MIT](../../LICENSE).
+- License: [MIT](./LICENSE).
