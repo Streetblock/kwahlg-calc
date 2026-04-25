@@ -1,3 +1,7 @@
+if (typeof module !== 'undefined' && module.exports) {
+    var { HareNiemeyerAllocator, DHondtAllocator } = require('./Allocators');
+}
+
 class CommitteeCalculator {
     constructor(options = {}) {
         this.hareAllocator = options.hareAllocator || new HareNiemeyerAllocator();
@@ -109,4 +113,10 @@ class CommitteeCalculator {
             protocolEntries
         };
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CommitteeCalculator
+    };
 }

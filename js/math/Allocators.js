@@ -343,3 +343,11 @@ function mapAllocatorPartyResult(party) {
         proportionalSeats: party.seats
     };
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        SainteLagueAllocator,
+        DHondtAllocator,
+        HareNiemeyerAllocator
+    };
+}
