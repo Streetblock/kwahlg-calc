@@ -2,6 +2,8 @@
   "name": "sitzrechner",
   "private": true,
   "scripts": {
+    "build:kwahlg-calc": "node scripts/build-kwahlg-calc-dist.js",
+    "check:kwahlg-calc-dist": "node scripts/build-kwahlg-calc-dist.js --check",
     "test": "node tests/run-tests.js"
   }
 }

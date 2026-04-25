@@ -1,4 +1,5 @@
 const suites = [
+    ...require('./kwahlg-calc-lib.test'),
     ...require('./allocators.test'),
     ...require('./nrw-kwahlg.test'),
     ...require('./committee-calculator.test')

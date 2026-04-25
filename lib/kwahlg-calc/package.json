@@ -1,0 +1,32 @@
+{
+  "name": "kwahlg-calc",
+  "version": "0.1.0",
+  "description": "Seat allocation core for NRW municipal elections (KWahlG), committee allocation, and standard methods.",
+  "license": "MIT",
+  "main": "index.js",
+  "browser": "dist/kwahlg-calc.umd.js",
+  "files": [
+    "index.js",
+    "src",
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "kwahlg",
+    "nrw",
+    "elections",
+    "seat-allocation",
+    "sainte-lague",
+    "dhondt",
+    "hare-niemeyer"
+  ],
+  "exports": {
+    ".": {
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./dist/kwahlg-calc.umd.js": "./dist/kwahlg-calc.umd.js"
+  }
+}

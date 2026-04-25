@@ -84,5 +84,24 @@ module.exports = [
             });
             assert.equal(result.protocolEntries[0].type, 'hare-summary');
         }
+    },
+    {
+        name: 'Allocators return the documented contract shape',
+        run() {
+            const sainte = new SainteLagueAllocator().calculate(sampleParties, 5, 2000);
+            const dhondt = new DHondtAllocator().calculate(sampleParties, 5, 2000);
+            const hare = new HareNiemeyerAllocator().calculate(sampleParties, 5, 2000);
+
+            [sainte, dhondt, hare].forEach((result) => {
+                assert.ok(Array.isArray(result.partyResults));
+                assert.ok(Array.isArray(result.protocolEntries));
+                assert.ok(Array.isArray(result.lotteryInfos));
+                assert.ok(result.tieInfo === null || typeof result.tieInfo === 'object');
+                assert.equal(typeof result.partyResults[0].id, 'string');
+                assert.equal(typeof result.partyResults[0].proportionalSeats, 'number');
+            });
+
+            assert.ok(Array.isArray(dhondt.allocationTable));
+        }
     }
 ];

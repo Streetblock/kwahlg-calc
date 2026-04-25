@@ -1,17 +1,7 @@
-const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
 const workspaceRoot = path.resolve(__dirname, '..', '..');
-
-function loadScript(filePath, exportsExpression, context) {
-    const source = fs.readFileSync(filePath, 'utf8');
-    const wrappedSource = `${source}\nthis.__testExports = ${exportsExpression};`;
-    vm.runInContext(wrappedSource, context, { filename: filePath });
-    const exported = context.__testExports;
-    delete context.__testExports;
-    return exported;
-}
 
 function createMathContext() {
     const context = {
@@ -24,43 +14,40 @@ function createMathContext() {
 }
 
 function loadAllocators() {
-    const context = createMathContext();
-    const allocatorsPath = path.join(workspaceRoot, 'js', 'math', 'Allocators.js');
-    const exports = loadScript(
-        allocatorsPath,
-        '{ SainteLagueAllocator, DHondtAllocator, HareNiemeyerAllocator }',
-        context
-    );
+    const { context, ...library } = loadKwahlgCalcLib();
+    const {
+        SainteLagueAllocator,
+        DHondtAllocator,
+        HareNiemeyerAllocator
+    } = library;
 
-    return { ...exports, context };
+    return {
+        SainteLagueAllocator,
+        DHondtAllocator,
+        HareNiemeyerAllocator,
+        context
+    };
 }
 
 function loadNrwCalculator() {
-    const { context, ...allocators } = loadAllocators();
-    const nrwPath = path.join(workspaceRoot, 'js', 'math', 'NrwCalculator.js');
-    const { NrwKWahlGCalculator } = loadScript(
-        nrwPath,
-        '{ NrwKWahlGCalculator }',
-        context
-    );
-
-    return { ...allocators, NrwKWahlGCalculator };
+    return loadKwahlgCalcLib();
 }
 
 function loadCommitteeCalculator() {
-    const { context, ...allocators } = loadAllocators();
-    const committeePath = path.join(workspaceRoot, 'js', 'math', 'CommitteeCalculator.js');
-    const { CommitteeCalculator } = loadScript(
-        committeePath,
-        '{ CommitteeCalculator }',
-        context
-    );
+    return loadKwahlgCalcLib();
+}
 
-    return { ...allocators, CommitteeCalculator };
+function loadKwahlgCalcLib() {
+    const packagePath = path.join(workspaceRoot, 'lib', 'kwahlg-calc');
+    delete require.cache[require.resolve(packagePath)];
+    const library = require(packagePath);
+
+    return { ...library, context: createMathContext() };
 }
 
 module.exports = {
     loadAllocators,
     loadNrwCalculator,
-    loadCommitteeCalculator
+    loadCommitteeCalculator,
+    loadKwahlgCalcLib
 };
