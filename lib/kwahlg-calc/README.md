@@ -32,9 +32,9 @@ If you want to consume the packaged browser API directly, load the calculator sc
 library entrypoint in order:
 
 ```html
-<script src="./js/math/Allocators.js"></script>
-<script src="./js/math/NrwCalculator.js"></script>
-<script src="./js/math/CommitteeCalculator.js"></script>
+<script src="./lib/kwahlg-calc/src/Allocators.js"></script>
+<script src="./lib/kwahlg-calc/src/NrwCalculator.js"></script>
+<script src="./lib/kwahlg-calc/src/CommitteeCalculator.js"></script>
 <script src="./lib/kwahlg-calc/index.js"></script>
 ```
 

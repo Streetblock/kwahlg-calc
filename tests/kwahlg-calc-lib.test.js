@@ -50,9 +50,9 @@ module.exports = [
             context.globalThis = context;
             vm.createContext(context);
 
-            runScriptInContext('js/math/Allocators.js', context);
-            runScriptInContext('js/math/NrwCalculator.js', context);
-            runScriptInContext('js/math/CommitteeCalculator.js', context);
+            runScriptInContext('lib/kwahlg-calc/src/Allocators.js', context);
+            runScriptInContext('lib/kwahlg-calc/src/NrwCalculator.js', context);
+            runScriptInContext('lib/kwahlg-calc/src/CommitteeCalculator.js', context);
             runScriptInContext('lib/kwahlg-calc/index.js', context);
 
             assert.equal(typeof context.KWahlGCalcLib.SainteLagueAllocator, 'function');
