@@ -419,7 +419,14 @@ function renderSimpleResultsTable(options) {
     const headerRow = thead.insertRow();
     headerRow.innerHTML = `<th>Farbe</th><th>Vorschlag / Liste</th><th>Stimmen</th><th>Anteil</th>`;
     simpleSizes.forEach((size) => {
-        headerRow.innerHTML += `<th style="text-align: center;">Sitze (${size})</th>`;
+        const resultForSize = results[size];
+        const effectiveSize = resultForSize && Number.isFinite(resultForSize.totalSeats)
+            ? resultForSize.totalSeats
+            : size;
+        const sizeLabel = effectiveSize !== size
+            ? `${size} -> ${effectiveSize}`
+            : `${size}`;
+        headerRow.innerHTML += `<th style="text-align: center;">Sitze (${sizeLabel})</th>`;
     });
 
     const tbody = table.createTBody();

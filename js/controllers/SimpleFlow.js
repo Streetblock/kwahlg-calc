@@ -144,6 +144,9 @@ class SimpleFlow {
             case 'dhondt':
                 allocator = new this.app.calcLib.DHondtAllocator();
                 break;
+            case 'nrw-bezirksvertretung':
+                allocator = new this.app.calcLib.NrwBezirksvertretungAllocator();
+                break;
             default:
                 return;
         }

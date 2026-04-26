@@ -83,7 +83,8 @@ class AppState {
     }
 
     setSimpleProcedure(procedure) {
-        this.simple.procedure = procedure || 'hare';
+        const supportedProcedures = new Set(['hare', 'sainte', 'dhondt', 'nrw-bezirksvertretung']);
+        this.simple.procedure = supportedProcedures.has(procedure) ? procedure : 'hare';
     }
 
     getSimpleSeatSizes() {
