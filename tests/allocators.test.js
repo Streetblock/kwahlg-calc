@@ -121,6 +121,8 @@ module.exports = [
             assert.equal(seats.d, 0);
             assert.equal(result.totalSeats, 10);
             assert.equal(result.protocolEntries[0].type, 'threshold-summary');
+            assert.equal(result.protocolEntries[0].legalReference, '\u00a7 46a Abs. 6');
+            assert.equal(result.protocolEntries[0].adjustedTotalVotes, 980);
             assert.equal(result.protocolEntries[0].excludedParties[0].id, 'd');
         }
     },
@@ -139,10 +141,16 @@ module.exports = [
 
             const result = allocator.calculate(parties, 3);
             const seats = Object.fromEntries(result.partyResults.map((party) => [party.id, party.proportionalSeats]));
+            const seatIncreaseEntry = result.protocolEntries.find((entry) => entry.type === 'seat-increase');
 
             assert.ok(result.totalSeats > 3);
+            assert.equal((result.totalSeats - 3) % 2, 0);
             assert.equal(seats.f, 1);
-            assert.ok(result.protocolEntries.some((entry) => entry.type === 'seat-increase'));
+            assert.ok(seatIncreaseEntry);
+            assert.equal(seatIncreaseEntry.step, 2);
+            assert.equal(seatIncreaseEntry.legalReference, '\u00a7 46a Abs. 7');
+            assert.ok(Array.isArray(seatIncreaseEntry.affectedParties));
+            assert.ok(seatIncreaseEntry.affectedParties.some((party) => party.id === 'f'));
         }
     }
 ];

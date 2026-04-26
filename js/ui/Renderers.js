@@ -679,6 +679,64 @@ function renderProtocolEntry(entry) {
             return `<p>${escapeProtocolText(entry.text || '')}</p>`;
         case 'list-item':
             return `<p>- ${escapeProtocolText(entry.text || '')}</p>`;
+        case 'threshold-summary': {
+            const thresholdPercent = Number(entry.thresholdPercent || 0).toLocaleString('de-DE', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            });
+            const totalVotes = Number(entry.totalVotes || 0);
+            const excludedVotes = Number(entry.excludedVotes || 0);
+            const adjustedTotalVotes = Number.isFinite(Number(entry.adjustedTotalVotes))
+                ? Number(entry.adjustedTotalVotes)
+                : Math.max(0, totalVotes - excludedVotes);
+            const excludedParties = Array.isArray(entry.excludedParties) ? entry.excludedParties : [];
+
+            const excludedListText = excludedParties.length > 0
+                ? excludedParties.map((party) => {
+                    const partyName = escapeProtocolText(party.abbreviation || '');
+                    const share = Number(party.voteSharePercent || 0).toLocaleString('de-DE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    return `${partyName} (${share} %)`;
+                }).join(', ')
+                : 'keine';
+
+            return `
+                <h6>${escapeProtocolText(entry.legalReference || '\u00a7 46a Abs. 6')}: Sperrklausel und bereinigte Gesamtstimmenzahl</h6>
+                <p>Gesamtstimmenzahl: ${totalVotes.toLocaleString('de-DE')}</p>
+                <p>Unter ${thresholdPercent} % (unberuecksichtigt): ${excludedListText}</p>
+                <p>Abgezogene Stimmen: ${excludedVotes.toLocaleString('de-DE')}</p>
+                <p>Bereinigte Gesamtstimmenzahl: ${adjustedTotalVotes.toLocaleString('de-DE')}</p>
+            `;
+        }
+        case 'seat-increase': {
+            const from = Number(entry.from || 0);
+            const to = Number(entry.to || 0);
+            const step = Number(entry.step || 0);
+            const iterations = Number(entry.iterations || 0);
+            const reason = escapeProtocolText(entry.reason || '');
+            const affectedParties = Array.isArray(entry.affectedParties) ? entry.affectedParties : [];
+            const affectedPartyText = affectedParties.length > 0
+                ? affectedParties.map((party) => {
+                    const partyName = escapeProtocolText(party.abbreviation || '');
+                    const share = Number(party.voteSharePercent || 0).toLocaleString('de-DE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    return `${partyName} (${share} %)`;
+                }).join(', ')
+                : 'nicht angegeben';
+
+            return `
+                <h6>${escapeProtocolText(entry.legalReference || '\u00a7 46a Abs. 7')}: Erhoehung der Gesamtsitzzahl</h6>
+                <p>Satzungsmaessige Sitzzahl: ${from.toLocaleString('de-DE')}</p>
+                <p>Die Sitzverteilung wurde mit jeweils um ${step.toLocaleString('de-DE')} erhoehter Gesamtsitzzahl wiederholt (${iterations.toLocaleString('de-DE')} Wiederholung(en)).</p>
+                <p>Neue Gesamtsitzzahl: ${to.toLocaleString('de-DE')}</p>
+                <p>Grund: ${reason}</p>
+                <p>Betroffene Liste(n): ${affectedPartyText}</p>
+            `;
+        }
         case 'allocation-table': {
             const rows = (entry.rows || []).map((row) => `
                 <tr>
