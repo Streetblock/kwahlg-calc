@@ -22,6 +22,7 @@ module.exports = [
             assert.equal(typeof library.SainteLagueAllocator, 'function');
             assert.equal(typeof library.DHondtAllocator, 'function');
             assert.equal(typeof library.HareNiemeyerAllocator, 'function');
+            assert.equal(typeof library.NrwBezirksvertretungAllocator, 'function');
             assert.equal(typeof library.NrwKWahlGCalculator, 'function');
             assert.equal(typeof library.CommitteeCalculator, 'function');
         }
@@ -35,6 +36,7 @@ module.exports = [
             const library = require(packagePath);
 
             assert.equal(typeof library.SainteLagueAllocator, 'function');
+            assert.equal(typeof library.NrwBezirksvertretungAllocator, 'function');
             assert.equal(typeof library.NrwKWahlGCalculator, 'function');
             assert.equal(typeof library.CommitteeCalculator, 'function');
         }
@@ -53,6 +55,7 @@ module.exports = [
             runScriptInContext('lib/kwahlg-calc/dist/kwahlg-calc.umd.js', context);
 
             assert.equal(typeof context.KWahlGCalcLib.SainteLagueAllocator, 'function');
+            assert.equal(typeof context.KWahlGCalcLib.NrwBezirksvertretungAllocator, 'function');
             assert.equal(typeof context.KWahlGCalcLib.NrwKWahlGCalculator, 'function');
             assert.equal(typeof context.KWahlGCalcLib.CommitteeCalculator, 'function');
         }
@@ -70,7 +73,7 @@ module.exports = [
 
             assert.throws(
                 () => runScriptInContext('lib/kwahlg-calc/index.js', context),
-                /Missing exports: SainteLagueAllocator, DHondtAllocator, HareNiemeyerAllocator, NrwKWahlGCalculator, CommitteeCalculator/
+                /Missing exports: SainteLagueAllocator, DHondtAllocator, HareNiemeyerAllocator, NrwBezirksvertretungAllocator, NrwKWahlGCalculator, CommitteeCalculator/
             );
         }
     }

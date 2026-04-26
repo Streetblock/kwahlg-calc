@@ -18,13 +18,15 @@ function loadAllocators() {
     const {
         SainteLagueAllocator,
         DHondtAllocator,
-        HareNiemeyerAllocator
+        HareNiemeyerAllocator,
+        NrwBezirksvertretungAllocator
     } = library;
 
     return {
         SainteLagueAllocator,
         DHondtAllocator,
         HareNiemeyerAllocator,
+        NrwBezirksvertretungAllocator,
         context
     };
 }

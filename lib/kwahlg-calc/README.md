@@ -7,6 +7,7 @@ It currently exposes:
 - `SainteLagueAllocator`
 - `DHondtAllocator`
 - `HareNiemeyerAllocator`
+- `NrwBezirksvertretungAllocator`
 - `NrwKWahlGCalculator`
 - `CommitteeCalculator`
 
@@ -17,6 +18,7 @@ It currently exposes:
 ```js
 const {
   SainteLagueAllocator,
+  NrwBezirksvertretungAllocator,
   NrwKWahlGCalculator,
   CommitteeCalculator
 } = require("./lib/kwahlg-calc");
@@ -39,6 +41,27 @@ After that, the public API is available globally as:
 ```js
 const { NrwKWahlGCalculator, CommitteeCalculator } = KWahlGCalcLib;
 ```
+
+### NrwBezirksvertretungAllocator
+
+```js
+const allocator = new NrwBezirksvertretungAllocator();
+const result = allocator.calculate(parties, 19);
+```
+
+Implements NRW Bezirksvertretung rules:
+
+- 2.5% threshold
+- Sainte-Lague/Schepers seat allocation
+- seat increase if a 5% list would otherwise receive no seat
+
+Returns:
+
+- `partyResults`
+- `protocolEntries`
+- `lotteryInfos`
+- `tieInfo`
+- `totalSeats`
 
 ### Build browser bundle
 

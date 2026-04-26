@@ -25,6 +25,7 @@ const bundleFooter = `
         'SainteLagueAllocator',
         'DHondtAllocator',
         'HareNiemeyerAllocator',
+        'NrwBezirksvertretungAllocator',
         'NrwKWahlGCalculator',
         'CommitteeCalculator'
     ];
@@ -55,6 +56,7 @@ const bundleFooter = `
         SainteLagueAllocator: typeof SainteLagueAllocator === 'function' ? SainteLagueAllocator : globalScope.SainteLagueAllocator,
         DHondtAllocator: typeof DHondtAllocator === 'function' ? DHondtAllocator : globalScope.DHondtAllocator,
         HareNiemeyerAllocator: typeof HareNiemeyerAllocator === 'function' ? HareNiemeyerAllocator : globalScope.HareNiemeyerAllocator,
+        NrwBezirksvertretungAllocator: typeof NrwBezirksvertretungAllocator === 'function' ? NrwBezirksvertretungAllocator : globalScope.NrwBezirksvertretungAllocator,
         NrwKWahlGCalculator: typeof NrwKWahlGCalculator === 'function' ? NrwKWahlGCalculator : globalScope.NrwKWahlGCalculator,
         CommitteeCalculator: typeof CommitteeCalculator === 'function' ? CommitteeCalculator : globalScope.CommitteeCalculator
     }, 'browser bundle');
